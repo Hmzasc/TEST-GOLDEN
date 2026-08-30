@@ -17,7 +17,7 @@
     <!-- ملاحظة: firebase-storage-compat.js لم يعد مطلوباً، لأن رفع الملفات أصبح عبر Cloudinary -->
 
     <!-- ===== جميع الأنماط مضمنة هنا ===== -->
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=20260830" />
 </head>
 <body>
 
@@ -300,7 +300,7 @@
         // تم نقل كل منطق التعليقات (عرض/إضافة/حذف) إلى ملف مشترك
         // comments.js يُستخدم في كل صفحات الموقع، حتى يعمل حذف
         // التعليقات لأي مسؤول مسجّل دخوله من أي صفحة بشكل موحّد.
-        // انظر وسم <script src="comments.js"> أسفل الصفحة.
+        // انظر وسم <script src="comments.js?v=20260830"> أسفل الصفحة.
 
         // ===== أحداث التمرير والقوائم =====
         window.addEventListener('scroll', () => {
@@ -362,9 +362,9 @@
 
     <!-- ===== أيقونة الإضافة العائمة (لا يوجد محتوى قابل للإضافة من هذه
          الصفحة، لكن تسمح بتسجيل الدخول/الخروج بشكل موحّد مع باقي الموقع) ===== -->
-    <script src="admin-widget.js"></script>
+    <script src="admin-widget.js?v=20260830"></script>
 
     <!-- ===== الملفات المشتركة (نفس النظام يُستخدم في كل صفحات الموقع) ===== -->
-    <script src="comments.js"></script>
+    <script src="comments.js?v=20260830"></script>
 </body>
 </html>

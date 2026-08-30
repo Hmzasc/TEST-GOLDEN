@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>Golden Bac - نتيجة الباكلوريا</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <!-- مكتبة الكونفيتي للاحتفال -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
+    <style>
+        .search-section {
+            padding: 60px 0;
+            min-height: 70vh;
+            position: relative;
+            background: linear-gradient(135deg, rgba(248,183,57,0.03) 0%, rgba(255,255,255,0.1) 100%);
+        }
+        .search-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            max-width: 650px;
+            margin: 0 auto;
+            padding: 40px;
+            border: 2px solid rgba(248,183,57,0.3);
+            transition: all 0.3s ease;
+        }
+        .dark-mode .search-card {
+            background: rgba(26, 37, 48, 0.9);
+        }
+
+        .type-toggle {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+        .type-btn {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid rgba(248,183,57,0.3);
+            border-radius: 50px;
+            background: transparent;
+            color: var(--text-color);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+        .type-btn.active {
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            border-color: var(--primary-color);
+            box-shadow: 0 5px 15px rgba(248,183,57,0.4);
+        }
+        .dark-mode .type-btn {
+            color: white;
+        }
+        .dark-mode .type-btn.active {
+            color: var(--secondary-color);
+        }
+
+        .result-card-display {
+            margin-top: 40px;
+            border-radius: 25px;
+            background: linear-gradient(145deg, #1e2a3a, #0f1a24);
+            color: white;
+            padding: 35px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            border: 3px solid transparent;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+        .result-card-display.success {
+            border-color: #2ecc71;
+            box-shadow: 0 0 30px rgba(46,204,113,0.3);
+        }
+        .result-card-display.fail {
+            border-color: #e74c3c;
+            box-shadow: 0 0 30px rgba(231,76,60,0.3);
+        }
+        .result-card-display.complementary {
+            border-color: #f1c40f;
+            box-shadow: 0 0 30px rgba(241,196,15,0.3);
+        }
+
+        .result-field {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 1.1rem;
+        }
+        .result-field:last-child {
+            border-bottom: none;
+        }
+        .result-field .label {
+            color: #aaa;
+            font-weight: 300;
+        }
+        .result-field .value {
+            font-weight: 700;
+            text-align: left;
+            max-width: 60%;
+        }
+
+        .decision-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        .decision-badge.success { background: #2ecc71; color: white; }
+        .decision-badge.fail { background: #e74c3c; color: white; }
+        .decision-badge.complementary { background: #f1c40f; color: #2c3e50; }
+
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .loader.active { display: block; }
+        .loader .spinner {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto;
+            border: 4px solid rgba(248,183,57,0.2);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+            .search-card { padding: 25px; }
+            .type-toggle { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Spinner, Header, Sidebar, Progress Bar (كما في الصفحة الرئيسية) -->
+    <!-- ... (نفس الكود السابق مع تعديل الروابط) ... -->
+    <!-- سأختصر هنا للتركيز على المحتوى، ولكن يجب نسخ الهيدر والسايدبار والفوتر بالكامل من index.html مع تعديل الروابط بـ "../" -->
+
+    <!-- المحتوى الأساسي -->
+    <section class="search-section">
+        <div class="container">
+            <div class="search-card">
+                <h2 class="section-title" style="margin-bottom: 30px;">
+                    <i class="fas fa-search"></i> استعلام نتيجة الباكلوريا
+                </h2>
+
+                <div class="type-toggle">
+                    <button class="type-btn" data-type="bac" id="btnBac">الدورة العادية</button>
+                    <button class="type-btn" data-type="bac2" id="btnBac2">الدورة التكميلية</button>
+                </div>
+
+                <div class="inquiry-form">
+                    <div class="form-group">
+                        <i class="fas fa-hashtag"></i>
+                        <input type="text" id="numero" placeholder="رقم المترشح (مثال: 12345)" required>
+                    </div>
+                    <button class="inquiry-btn" id="searchBtn">
+                        <i class="fas fa-search"></i> بحث
+                    </button>
+                </div>
+
+                <div class="loader" id="loader">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 15px;">جاري البحث عن النتيجة...</p>
+                </div>
+
+                <div id="resultContainer" style="display: none;"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer و Back to Top (نفس index.html) -->
+    <!-- ... -->
+
+    <script>
+        let examType = 'bac'; // افتراضي
+
+        document.getElementById('btnBac').addEventListener('click', () => {
+            examType = 'bac';
+            document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('btnBac').classList.add('active');
+        });
+        document.getElementById('btnBac2').addEventListener('click', () => {
+            examType = 'bac2';
+            document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('btnBac2').classList.add('active');
+        });
+
+        document.getElementById('searchBtn').addEventListener('click', async () => {
+            const numero = document.getElementById('numero').value.trim();
+            if (!numero || isNaN(numero)) {
+                alert('الرجاء إدخال رقم صحيح');
+                return;
+            }
+
+            const loader = document.getElementById('loader');
+            const resultDiv = document.getElementById('resultContainer');
+            loader.classList.add('active');
+            resultDiv.style.display = 'none';
+
+            try {
+                // استدعاء API (تأكد من أن المسار صحيح: /api/bac)
+                const res = await fetch(`/api/bac?numero=${numero}&type=${examType}`);
+                const data = await res.json();
+
+                loader.classList.remove('active');
+
+                if (data.error) {
+                    alert(data.error);
+                    return;
+                }
+
+                const result = data.data;
+                let decisionClass = '';
+                const decLower = (result.decision || '').toLowerCase();
+                if (decLower.includes('ناجح') && !decLower.includes('غير')) {
+                    decisionClass = 'success';
+                    confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                } else if (decLower.includes('غير ناجح') || decLower.includes('غائب')) {
+                    decisionClass = 'fail';
+                } else {
+                    decisionClass = 'complementary';
+                }
+
+                let html = `
+                    <div class="result-card-display ${decisionClass}">
+                        <div class="result-field"><span class="label">الاسم الكامل</span><span class="value">${result.name || 'غير متوفر'}</span></div>
+                        <div class="result-field"><span class="label">الرقم</span><span class="value">${result.numero || ''}</span></div>
+                `;
+                if (result.serie) html += `<div class="result-field"><span class="label">الشعبة</span><span class="value">${result.serie}</span></div>`;
+                if (result.school) html += `<div class="result-field"><span class="label">المؤسسة</span><span class="value">${result.school}</span></div>`;
+                if (result.centre) html += `<div class="result-field"><span class="label">مركز الامتحان</span><span class="value">${result.centre}</span></div>`;
+                if (result.wilaya) html += `<div class="result-field"><span class="label">الولاية</span><span class="value">${result.wilaya}</span></div>`;
+                html += `<div class="result-field"><span class="label">القرار</span><span class="value"><span class="decision-badge ${decisionClass}">${result.decision || 'غير معروف'}</span></span></div>`;
+                if (result.moyenne) html += `<div class="result-field"><span class="label">المعدل</span><span class="value">${result.moyenne}</span></div>`;
+                html += `</div>`;
+
+                resultDiv.innerHTML = html;
+                resultDiv.style.display = 'block';
+                resultDiv.scrollIntoView({ behavior: 'smooth' });
+            } catch (err) {
+                loader.classList.remove('active');
+                alert('حدث خطأ في الاتصال بالخادم');
+                console.error(err);
+            }
+        });
+    </script>
+    <script src="../script.js"></script>
+</body>
+</html>

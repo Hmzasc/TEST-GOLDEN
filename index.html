@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <meta name="google-site-verification" content="7ee7KIEdtCheUYiTeQEXUs8q2uMbuQDUP4_D29o5kyY" />
+    <title>گولدن باك – المركز التعليمي التفاعلي</title>
+
+    <!-- ===== FONTS & ICONS ===== -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
+
+    <!-- ===== FIREBASE (يتم تحميله قبل أي كود يستخدمه) ===== -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <!-- ملاحظة: firebase-storage-compat.js لم يعد مطلوباً، لأن رفع الملفات أصبح عبر Cloudinary -->
+
+    <!-- ===== جميع الأنماط مضمنة هنا ===== -->
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+    <!-- ===== SPINNER ===== -->
+    <div class="spinner-overlay" id="spinnerOverlay">
+        <div class="spinner-dots"><span></span><span></span><span></span></div>
+        <div class="spinner-text" id="spinnerText">جاري التحميل...</div>
+    </div>
+
+    <!-- ===== PROGRESS BAR ===== -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- ===== HEADER ===== -->
+    <header id="mainHeader">
+        <div class="container header-content">
+            <div class="logo-container">
+                <div class="logo"><img src="golden.png" alt="Golden Bac" /></div>
+                <div class="logo-text"><h1>Golden Bac</h1><p>مركز كولدن باك</p></div>
+            </div>
+            <button class="hamburger-menu" id="hamburgerMenu" aria-label="القائمة">
+                <div class="hamburger-icon"><span></span><span></span><span></span></div>
+            </button>
+        </div>
+    </header>
+
+    <!-- ===== SIDEBAR ===== -->
+    <div class="sidebar-menu" id="sidebarMenu">
+        <div class="logo-container">
+            <div class="logo"><img src="golden.png" alt="Golden Bac" /></div>
+            <div class="logo-text"><h1>Golden Bac</h1><p>كولدن باك</p></div>
+        </div>
+        <ul class="menu-items">
+            <li class="menu-item"><a href="index.html" class="active"><i class="fas fa-home"></i><span>الرئيسية</span></a></li>
+            <li class="menu-item"><a href="subjects.html"><i class="fas fa-book-open"></i><span>المواد الدراسية</span></a></li>
+            <li class="menu-item"><a href="exams.html"><i class="fas fa-file-alt"></i><span>الامتحانات</span></a></li>
+            <li class="menu-item"><a href="tips.html"><i class="fas fa-lightbulb"></i><span>نصائح للنجاح</span></a></li>
+            <li class="menu-item"><a href="serie.html"><i class="fas fa-folder-open"></i><span>مواضيع المركز (سلسلة)</span></a></li>
+            <li class="menu-item"><a href="location.html"><i class="fas fa-map-marker-alt"></i><span>موقع المركز</span></a></li>
+            <li class="menu-item"><a href="inquiry.html"><i class="fas fa-envelope"></i><span>استفسارات</span></a></li>
+        </ul>
+    </div>
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <!-- ===== HERO ===== -->
+    <section class="hero" id="home">
+        <div class="particles" id="particlesContainer"></div>
+        <div class="container">
+            <div class="hero-badge"><i class="fas fa-star"></i> المركز الرسمي لتحضير البكالوريا</div>
+            <h2>مرحباً بكم في <span>Golden Bac</span></h2>
+            <p>نقدم لكم أفضل المصادر التعليمية لتحضير شهادة البكالوريا في موريتانيا. كتب، امتحانات سابقة، ونصائح قيمة لتحقيق النجاح.</p>
+            <div class="hero-actions">
+                <a href="#quick-access" class="btn-primary"><i class="fas fa-rocket"></i> استكشف الآن</a>
+                <a href="#comments" class="btn-secondary"><i class="fas fa-comment"></i> شارك برأيك</a>
+            </div>
+            <div class="hero-year">📅 2025-2026 • سنة البكالوريا</div>
+        </div>
+    </section>
+
+    <!-- ===== QUICK ACCESS ===== -->
+    <section class="quick-access" id="quick-access">
+        <div class="container">
+            <div class="section-title"><h2>الدخول السريع</h2><p>اكتشف محتوانا التعليمي الغني</p></div>
+            <div class="access-grid" id="accessGrid"></div>
+        </div>
+    </section>
+
+    <!-- ===== COUNTDOWN ===== -->
+    <section class="countdown-section">
+        <div class="container">
+            <div class="section-title"><h2>العد التنازلي للبكالوريا 2026</h2><p>الوقت المتبقي على اليوم الأول من الامتحانات</p></div>
+           <div class="countdown-grid" id="countdownGrid">
+    <div class="countdown-item">
+        <div class="countdown-ring"></div>
+        <div class="countdown-number" id="days">00</div>
+        <div class="countdown-label">أيام</div>
+    </div>
+    <div class="countdown-item">
+        <div class="countdown-ring"></div>
+        <div class="countdown-number" id="hours">00</div>
+        <div class="countdown-label">ساعات</div>
+    </div>
+    <div class="countdown-item">
+        <div class="countdown-ring"></div>
+        <div class="countdown-number" id="minutes">00</div>
+        <div class="countdown-label">دقائق</div>
+    </div>
+    <div class="countdown-item">
+        <div class="countdown-ring"></div>
+        <div class="countdown-number" id="seconds">00</div>
+        <div class="countdown-label">ثواني</div>
+    </div>
+</div>
+            <div class="countdown-progress">
+                <div class="bar-track"><div class="bar-fill" id="progressFill"></div></div>
+                <div class="bar-label"><span>بدأنا</span><span id="progressPercent">0%</span><span>الامتحان</span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== COMMENTS ===== -->
+    <section class="comments-section" id="comments">
+        <div class="container">
+            <div class="comments-container">
+                <div class="comments-header">
+                    <i class="fas fa-comments"></i>
+                    <h2>💬 التعليقات</h2>
+                    <span class="comments-badge" id="commentsCount">0</span>
+                </div>
+                <div class="add-comment-form">
+                    <div class="form-group"><i class="fas fa-user"></i><input type="text" id="userName" placeholder="اسمك (اختياري)" maxlength="50" /></div>
+                    <div class="form-group"><i class="fas fa-comment-dots"></i><textarea id="commentText" placeholder="اكتب تعليقك هنا..." rows="4" maxlength="500"></textarea></div>
+                    <button class="submit-comment-btn" id="submitCommentBtn"><i class="fas fa-paper-plane"></i> إرسال التعليق</button>
+                </div>
+                <div class="comments-list" id="commentsList"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ملاحظة: أيقونة الإضافة العائمة وأي نافذة تسجيل دخول تُبنى الآن
+         ديناميكياً بواسطة admin-widget.js — index.html لا يحتاج لوحة
+         إضافة خاصة به لأن كل نوع محتوى (مواد/امتحانات/نصائح/سلسلة)
+         صار يُدار من صفحته المخصصة مباشرة. -->
+
+    <!-- ===== BACK TO TOP ===== -->
+    <button class="back-to-top" id="backToTop"><i class="fas fa-arrow-up"></i></button>
+
+    <!-- ===== FOOTER ===== -->
+    <footer>
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-logo"><img src="golden.png" alt="Golden Bac" /><div><h3>Golden Bac</h3><p>مركز كولدن باك التعليمي</p></div></div>
+                <div class="footer-social">
+                    <a href="https://www.facebook.com/med.ahmed.92372" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://wa.me/22234987117" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                    <a href="https://t.me/goldenbaccenter" target="_blank"><i class="fab fa-telegram-plane"></i></a>
+                    <a href="mailto:centergolden04@gmail.com"><i class="fas fa-envelope"></i></a>
+                </div>
+            </div>
+            <div class="footer-grid">
+                <div class="footer-section"><h4>روابط سريعة</h4><ul><li><a href="index.html"><i class="fas fa-angle-left"></i> الرئيسية</a></li><li><a href="subjects.html"><i class="fas fa-angle-left"></i> المواد الدراسية</a></li><li><a href="exams.html"><i class="fas fa-angle-left"></i> الامتحانات</a></li><li><a href="tips.html"><i class="fas fa-angle-left"></i> نصائح</a></li><li><a href="location.html"><i class="fas fa-angle-left"></i> موقع المركز</a></li><li><a href="inquiry.html"><i class="fas fa-angle-left"></i> استفسارات</a></li></ul></div>
+                <div class="footer-section"><h4>عن المركز</h4><p>مركز Golden Bac يهدف إلى تقديم أفضل الدعم التعليمي لطلاب البكالوريا في موريتانيا.</p></div>
+                <div class="footer-section"><h4>اتصل بنا</h4><ul class="contact-info"><li><i class="fas fa-map-marker-alt"></i> نواكشوط، عرفات – قرب مجمع بلادي</li><li><i class="fas fa-phone"></i> <a href="tel:+22234987117">+222 34 98 71 17</a></li><li><i class="fas fa-phone"></i> <a href="tel:+22248359510">+222 48 35 95 10</a></li><li><i class="fas fa-envelope"></i> <a href="mailto:centergolden04@gmail.com">centergolden04@gmail.com</a></li></ul></div>
+            </div>
+            <div class="footer-bottom"><p>تم التطوير بواسطة: <strong id="developerName">حمزة سيدي</strong> &copy; 2026 | جميع الحقوق محفوظة لمركز Golden Bac</p></div>
+        </div>
+    </footer>
+
+    <!-- ============================================================
+    جافا سكريبت (كل الكود)
+    ============================================================ -->
+    <script>
+        // ============================================================
+        // FIREBASE CONFIG (من صورتك)
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyD1n9k7aUhJE0BKcxuY7Inn8eNs11wXzSo",
+            authDomain: "golden-bac-c4bbd.firebaseapp.com",
+            projectId: "golden-bac-c4bbd",
+            storageBucket: "golden-bac-c4bbd.firebasestorage.app",
+            messagingSenderId: "299761998753",
+            appId: "1:299761998753:web:f1b648084c4e0a5b1f49e0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        // ملاحظة: كل الرفع للملفات (صور/PDF) صار يُدار من داخل الصفحة
+        // المخصصة لكل نوع محتوى (subjects.html / exams.html / serie.html)
+        // عبر Cloudinary، وليس من index.html.
+
+        // ============================================================
+        // دوال مساعدة
+        // ============================================================
+        function showToast(message, type = 'success', duration = 4000) {
+            const old = document.querySelector('.golden-toast');
+            if (old) old.remove();
+            const toast = document.createElement('div');
+            toast.className = `golden-toast toast-${type}`;
+            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle' };
+            toast.innerHTML = `
+            <i class="fas ${icons[type] || icons.info} toast-icon"></i>
+            <span>${message}</span>
+            <button class="toast-close"><i class="fas fa-times"></i></button>
+          `;
+            document.body.appendChild(toast);
+            toast.querySelector('.toast-close').addEventListener('click', () => {
+                toast.style.animation = 'toastOut 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            });
+            setTimeout(() => {
+                if (toast.isConnected) {
+                    toast.style.animation = 'toastOut 0.3s ease forwards';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, duration);
+        }
+
+        function showSpinner(text = 'جاري التحميل...') {
+            document.getElementById('spinnerText').textContent = text;
+            document.getElementById('spinnerOverlay').classList.add('active');
+        }
+
+        function hideSpinner() {
+            document.getElementById('spinnerOverlay').classList.remove('active');
+        }
+
+        // ============================================================
+        // باقي الوظائف (العد التنازلي، الجسيمات، التعليقات، الروابط السريعة)
+        // ============================================================
+
+        // ===== العد التنازلي =====
+        const BAC_DATE = new Date('June 29, 2026 07:00:00').getTime();
+        const START_DATE = new Date('October 1, 2025 00:00:00').getTime();
+
+        function updateCountdown() {
+            const now = Date.now();
+            const diff = BAC_DATE - now;
+            if (diff <= 0) {
+                document.getElementById('days').textContent = '00';
+                document.getElementById('hours').textContent = '00';
+                document.getElementById('minutes').textContent = '00';
+                document.getElementById('seconds').textContent = '00';
+                return;
+            }
+            const d = Math.floor(diff / 86400000);
+            const h = Math.floor((diff % 86400000) / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            document.getElementById('days').textContent = String(d).padStart(2, '0');
+            document.getElementById('hours').textContent = String(h).padStart(2, '0');
+            document.getElementById('minutes').textContent = String(m).padStart(2, '0');
+            document.getElementById('seconds').textContent = String(s).padStart(2, '0');
+            const total = BAC_DATE - START_DATE;
+            const passed = now - START_DATE;
+            const pct = Math.min(100, Math.max(0, (passed / total) * 100));
+            document.getElementById('progressFill').style.width = pct + '%';
+            document.getElementById('progressPercent').textContent = Math.round(pct) + '%';
+        }
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+
+        // ===== الجسيمات =====
+        const container = document.getElementById('particlesContainer');
+        for (let i = 0; i < 25; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            const size = 4 + Math.random() * 12;
+            p.style.cssText =
+                `width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${Math.random()*20}s;animation-duration:${15+Math.random()*20}s;`;
+            container.appendChild(p);
+        }
+
+        // ===== الروابط السريعة =====
+        const QUICK_ITEMS = [
+            { name: 'المواد الدراسية', icon: 'fa-book', desc: 'تصفح الكتب والمراجع', link: 'subjects.html',
+                badge: 'تصفح' },
+            { name: 'الامتحانات السابقة', icon: 'fa-file-alt', desc: 'امتحانات البكالوريا', link: 'exams.html',
+                badge: 'تصفح' },
+            { name: 'المسابقة الرمضانية', icon: 'fa-moon', desc: 'أسئلة يومية', link: 'ramadan.html', badge: 'شارك' },
+            { name: 'تمارين المركز', icon: 'fa-question-circle', desc: 'تمارين من أساتذة المركز', link: 'serie.html',
+                badge: 'حل' },
+            { name: 'نصائح للطلاب', icon: 'fa-lightbulb', desc: 'إرشادات للنجاح', link: 'tips.html', badge: 'اقرأ' },
+            { name: 'موقع المركز', icon: 'fa-map-marker-alt', desc: 'شاهد الفيديو التعريفي', link: 'location.html',
+                badge: 'عرض' },
+            { name: 'استفسارات', icon: 'fa-envelope', desc: 'تواصل مع المركز', link: 'inquiry.html', badge: 'أرسل' },
+            { name: 'النتائج', icon: 'fa-chart-line', desc: 'نتائج الباكلوريا وبريفة', link: 'résultats/index.html',
+                badge: 'استعلم' }
+        ];
+        const grid = document.getElementById('accessGrid');
+        grid.innerHTML = QUICK_ITEMS.map(item => `
+            <a href="${item.link}" class="access-card">
+              <div class="access-icon"><i class="fas ${item.icon}"></i></div>
+              <h3>${item.name}</h3>
+              <p>${item.desc}</p>
+              <span class="access-badge">${item.badge} <i class="fas fa-arrow-left"></i></span>
+            </a>
+          `).join('');
+
+        // ===== التعليقات =====
+        // تم نقل كل منطق التعليقات (عرض/إضافة/حذف) إلى ملف مشترك
+        // comments.js يُستخدم في كل صفحات الموقع، حتى يعمل حذف
+        // التعليقات لأي مسؤول مسجّل دخوله من أي صفحة بشكل موحّد.
+        // انظر وسم <script src="comments.js"> أسفل الصفحة.
+
+        // ===== أحداث التمرير والقوائم =====
+        window.addEventListener('scroll', () => {
+            const win = window.scrollY;
+            const h = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            document.getElementById('progressBar').style.width = (win / h) * 100 + '%';
+            document.getElementById('backToTop').classList.toggle('show', win > 300);
+            document.getElementById('mainHeader').classList.toggle('scrolled', win > 50);
+        });
+        document.getElementById('backToTop').addEventListener('click', () => window.scrollTo({ top: 0,
+            behavior: 'smooth' }));
+
+        // القائمة الجانبية
+        const hamburger = document.getElementById('hamburgerMenu');
+        const sidebar = document.getElementById('sidebarMenu');
+        const overlayMenu = document.getElementById('menuOverlay');
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('open');
+            sidebar.classList.toggle('open');
+            overlayMenu.classList.toggle('active');
+            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : 'auto';
+        });
+        overlayMenu.addEventListener('click', () => {
+            hamburger.classList.remove('open');
+            sidebar.classList.remove('open');
+            overlayMenu.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        });
+
+        // رابط المطور
+        document.getElementById('developerName').addEventListener('click', () => {
+            window.open('https://www.facebook.com/med.ahmed.92372', '_blank');
+        });
+
+        // ===== دعم الوضع المظلم =====
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+        }
+        const themeToggle = document.createElement('button');
+        themeToggle.id = 'themeToggle';
+        themeToggle.style.cssText =
+            'position:fixed;bottom:170px;left:30px;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.15);color:white;font-size:1.2rem;cursor:pointer;z-index:998;display:none;align-items:center;justify-content:center;';
+        document.body.appendChild(themeToggle);
+
+        function updateThemeIcon() {
+            const isDark = document.body.classList.contains('dark-mode');
+            themeToggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            themeToggle.style.display = 'flex';
+        }
+        updateThemeIcon();
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            updateThemeIcon();
+        });
+
+        console.log('🚀 Golden Bac');
+    </script>
+
+    <!-- ===== أيقونة الإضافة العائمة (لا يوجد محتوى قابل للإضافة من هذه
+         الصفحة، لكن تسمح بتسجيل الدخول/الخروج بشكل موحّد مع باقي الموقع) ===== -->
+    <script src="admin-widget.js"></script>
+
+    <!-- ===== الملفات المشتركة (نفس النظام يُستخدم في كل صفحات الموقع) ===== -->
+    <script src="comments.js"></script>
+</body>
+</html>

@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <title>Golden Bac - المواد الدراسية</title>
+
+    <!-- ===== FONTS & ICONS ===== -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
+
+    <!-- ===== الأنماط الموحدة ===== -->
+    <link rel="stylesheet" href="styles.css" />
+
+    <!-- ===== FIREBASE ===== -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+    <!-- ===== pdf.js لعرض الملفات داخل الصفحة ===== -->
+    <!-- ===== pdf.js لعرض الملفات + pdf-lib للعلامة المائية عند التنزيل ===== -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+</head>
+<body>
+
+    <!-- ===== SPINNER ===== -->
+    <div class="spinner-overlay" id="spinnerOverlay">
+        <div class="spinner-dots"><span></span><span></span><span></span></div>
+        <div class="spinner-text" id="spinnerText">جاري التحميل...</div>
+    </div>
+
+    <!-- ===== PROGRESS BAR ===== -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- ===== HEADER ===== -->
+    <header id="mainHeader">
+        <div class="container header-content">
+            <div class="logo-container">
+                <div class="logo"><img src="golden.png" alt="Golden Bac" /></div>
+                <div class="logo-text"><h1>Golden Bac</h1><p>مركز كولدن باك</p></div>
+            </div>
+            <button class="hamburger-menu" id="hamburgerMenu" aria-label="القائمة">
+                <div class="hamburger-icon"><span></span><span></span><span></span></div>
+            </button>
+        </div>
+    </header>
+
+    <!-- ===== SIDEBAR ===== -->
+    <div class="sidebar-menu" id="sidebarMenu">
+        <div class="logo-container">
+            <div class="logo"><img src="golden.png" alt="Golden Bac" /></div>
+            <div class="logo-text"><h1>Golden Bac</h1><p>كولدن باك</p></div>
+        </div>
+        <ul class="menu-items">
+            <li class="menu-item"><a href="index.html"><i class="fas fa-home"></i><span>الرئيسية</span></a></li>
+            <li class="menu-item"><a href="subjects.html" class="active"><i class="fas fa-book-open"></i><span>المواد الدراسية</span></a></li>
+            <li class="menu-item"><a href="exams.html"><i class="fas fa-file-alt"></i><span>الامتحانات</span></a></li>
+            <li class="menu-item"><a href="tips.html"><i class="fas fa-lightbulb"></i><span>نصائح للنجاح</span></a></li>
+            <li class="menu-item"><a href="serie.html"><i class="fas fa-folder-open"></i><span>مواضيع المركز (سلسلة)</span></a></li>
+            <li class="menu-item"><a href="location.html"><i class="fas fa-map-marker-alt"></i><span>موقع المركز</span></a></li>
+            <li class="menu-item"><a href="inquiry.html"><i class="fas fa-envelope"></i><span>استفسارات</span></a></li>
+        </ul>
+    </div>
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <!-- ===== المواد الدراسية ===== -->
+    <section class="subjects-section" id="subjects">
+        <div class="container">
+            <div class="section-title">
+                <h2>المواد الدراسية للبكالوريا</h2>
+                <p class="section-subtitle">اختر المادة لعرض الكتب والمراجع التعليمية الخاصة بها</p>
+            </div>
+            <div class="subjects-grid" id="subjectsGrid">
+                <div class="no-subjects-msg"><i class="fas fa-spinner fa-spin"></i><p>جاري تحميل المواد...</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== مودال الموارد (كتب المادة) ===== -->
+    <div class="modal" id="resourcesModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">الموارد التعليمية</h3>
+                <button class="close-modal" id="closeModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="resources-loading" id="resourcesLoading" style="display:none;">
+                    <div class="pdf-spinner" style="margin:0 auto 12px;"></div>
+                    <p>جاري تحميل الموارد...</p>
+                </div>
+                <div class="resources-list" id="resourcesList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== مودال عارض PDF ===== -->
+    <div class="pdf-modal" id="pdfModal">
+        <div class="pdf-modal-content">
+            <div class="pdf-modal-header">
+                <h3 id="pdfTitle">عرض الملف</h3>
+                <button class="pdf-modal-close" id="pdfCloseBtn">&times;</button>
+            </div>
+            <div class="pdf-modal-body">
+                <div class="pdf-toolbar">
+                    <div class="pdf-toolbar-group">
+                        <button class="pdf-tool-btn" id="prevPageBtn"><i class="fas fa-arrow-right"></i> السابق</button>
+                        <span class="pdf-page-info">صفحة <span id="currentPage">1</span> من <span id="totalPages">1</span></span>
+                        <button class="pdf-tool-btn" id="nextPageBtn">التالي <i class="fas fa-arrow-left"></i></button>
+                    </div>
+                    <div class="pdf-toolbar-group">
+                        <button class="pdf-tool-btn" id="rotateLeftBtn"><i class="fas fa-undo"></i> لليسار</button>
+                        <button class="pdf-tool-btn" id="rotateRightBtn">لليمين <i class="fas fa-redo"></i></button>
+                        <button class="pdf-tool-btn" id="zoomOutBtn"><i class="fas fa-search-minus"></i></button>
+                        <button class="pdf-tool-btn" id="zoomInBtn"><i class="fas fa-search-plus"></i></button>
+                        <a href="#" id="pdfDownload" class="pdf-tool-btn" download><i class="fas fa-download"></i> تنزيل</a>
+                    </div>
+                </div>
+                <div class="pdf-canvas-container">
+                    <div class="pdf-loading" id="pdfLoading"><div class="pdf-spinner"></div><p>جاري تحميل الملف...</p></div>
+                    <canvas id="pdf-canvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== COMMENTS ===== -->
+    <section class="comments-section" id="comments">
+        <div class="container">
+            <div class="comments-container">
+                <div class="comments-header">
+                    <i class="fas fa-comments"></i>
+                    <h2>💬 التعليقات</h2>
+                    <span class="comments-badge" id="commentsCount">0</span>
+                </div>
+                <div class="add-comment-form">
+                    <div class="form-group"><i class="fas fa-user"></i><input type="text" id="userName" placeholder="اسمك (اختياري)" maxlength="50" /></div>
+                    <div class="form-group"><i class="fas fa-comment-dots"></i><textarea id="commentText" placeholder="اكتب تعليقك هنا..." rows="4" maxlength="500"></textarea></div>
+                    <button class="submit-comment-btn" id="submitCommentBtn"><i class="fas fa-paper-plane"></i> إرسال التعليق</button>
+                </div>
+                <div class="comments-list" id="commentsList"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== BACK TO TOP ===== -->
+    <button class="back-to-top" id="backToTop"><i class="fas fa-arrow-up"></i></button>
+
+    <!-- ===== FOOTER ===== -->
+    <footer>
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-logo"><img src="golden.png" alt="Golden Bac" /><div><h3>Golden Bac</h3><p>مركز كولدن باك التعليمي</p></div></div>
+                <div class="footer-social">
+                    <a href="https://www.facebook.com/med.ahmed.92372" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://wa.me/22234987117" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                    <a href="https://t.me/goldenbaccenter" target="_blank"><i class="fab fa-telegram-plane"></i></a>
+                    <a href="mailto:centergolden04@gmail.com"><i class="fas fa-envelope"></i></a>
+                </div>
+            </div>
+            <div class="footer-grid">
+                <div class="footer-section"><h4>روابط سريعة</h4><ul><li><a href="index.html"><i class="fas fa-angle-left"></i> الرئيسية</a></li><li><a href="subjects.html"><i class="fas fa-angle-left"></i> المواد الدراسية</a></li><li><a href="exams.html"><i class="fas fa-angle-left"></i> الامتحانات</a></li><li><a href="tips.html"><i class="fas fa-angle-left"></i> نصائح</a></li><li><a href="location.html"><i class="fas fa-angle-left"></i> موقع المركز</a></li><li><a href="inquiry.html"><i class="fas fa-angle-left"></i> استفسارات</a></li></ul></div>
+                <div class="footer-section"><h4>عن المركز</h4><p>مركز Golden Bac يهدف إلى تقديم أفضل الدعم التعليمي لطلاب البكالوريا في موريتانيا.</p></div>
+                <div class="footer-section"><h4>اتصل بنا</h4><ul class="contact-info"><li><i class="fas fa-map-marker-alt"></i> نواكشوط، عرفات – قرب مجمع بلادي</li><li><i class="fas fa-phone"></i> <a href="tel:+22234987117">+222 34 98 71 17</a></li><li><i class="fas fa-phone"></i> <a href="tel:+22248359510">+222 48 35 95 10</a></li><li><i class="fas fa-envelope"></i> <a href="mailto:centergolden04@gmail.com">centergolden04@gmail.com</a></li></ul></div>
+            </div>
+            <div class="footer-bottom"><p>تم التطوير بواسطة: <strong id="developerName">حمزة سيدي</strong> &copy; 2026 | جميع الحقوق محفوظة لمركز Golden Bac</p></div>
+        </div>
+    </footer>
+
+    <script>
+        // ============================================================
+        // FIREBASE CONFIG (نفس إعدادات باقي صفحات الموقع)
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyD1n9k7aUhJE0BKcxuY7Inn8eNs11wXzSo",
+            authDomain: "golden-bac-c4bbd.firebaseapp.com",
+            projectId: "golden-bac-c4bbd",
+            storageBucket: "golden-bac-c4bbd.firebasestorage.app",
+            messagingSenderId: "299761998753",
+            appId: "1:299761998753:web:f1b648084c4e0a5b1f49e0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        // ============================================================
+        // دوال مساعدة
+        // ============================================================
+        function showToast(message, type = 'success', duration = 4000) {
+            const old = document.querySelector('.golden-toast');
+            if (old) old.remove();
+            const toast = document.createElement('div');
+            toast.className = `golden-toast toast-${type}`;
+            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle' };
+            toast.innerHTML = `
+            <i class="fas ${icons[type] || icons.info} toast-icon"></i>
+            <span>${message}</span>
+            <button class="toast-close"><i class="fas fa-times"></i></button>
+          `;
+            document.body.appendChild(toast);
+            toast.querySelector('.toast-close').addEventListener('click', () => {
+                toast.style.animation = 'toastOut 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            });
+            setTimeout(() => {
+                if (toast.isConnected) {
+                    toast.style.animation = 'toastOut 0.3s ease forwards';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, duration);
+        }
+
+        function showSpinner(text = 'جاري التحميل...') {
+            document.getElementById('spinnerText').textContent = text;
+            document.getElementById('spinnerOverlay').classList.add('active');
+        }
+        function hideSpinner() {
+            document.getElementById('spinnerOverlay').classList.remove('active');
+        }
+
+        function escapeHtml(text) {
+            const d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
+
+        // ============================================================
+        // إعدادات Cloudinary (رفع ملفات الكتب) + لوحة الإضافة العائمة
+        // ============================================================
+        const ADMIN_EMAIL = 'centergolden04@gmail.com';
+        const CLOUDINARY_CLOUD_NAME = 'ktudy585';
+        const CLOUDINARY_UPLOAD_PRESET = 'Center';
+        const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`;
+
+        function isAdminNow() {
+            return !!(auth.currentUser && auth.currentUser.email === ADMIN_EMAIL);
+        }
+
+        function uploadFile(file, path) {
+            return new Promise((resolve, reject) => {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+                if (path) {
+                    const folder = path.includes('/') ? path.substring(0, path.lastIndexOf('/')) : '';
+                    if (folder) formData.append('folder', folder);
+                }
+                fetch(CLOUDINARY_UPLOAD_URL, { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.secure_url) resolve(data.secure_url);
+                        else reject(new Error(data.error ? data.error.message : 'فشل الرفع'));
+                    })
+                    .catch(reject);
+            });
+        }
+
+        // ---------- نموذج إضافة مادة (يظهر داخل الأيقونة العائمة) ----------
+        window.getAdminPanelHTML = function () {
+            return `
+                <h4 style="margin-bottom:12px;">📚 إضافة مادة جديدة</h4>
+                <div class="form-group"><label>اسم المادة</label><input type="text" id="awSubjectName" placeholder="مثال: الرياضيات" /></div>
+                <div class="form-group"><label>الأيقونة</label><div class="icon-picker" data-input-id="awSubjectIcon" data-default="fa-book"></div></div>
+                <div class="form-group"><label>الوصف</label><input type="text" id="awSubjectDesc" placeholder="وصف مختصر" /></div>
+                <button class="btn-submit" id="awAddSubjectBtn"><i class="fas fa-plus"></i> إضافة مادة</button>
+            `;
+        };
+
+        window.bindAdminPanelEvents = function () {
+            document.getElementById('awAddSubjectBtn').addEventListener('click', async () => {
+                const name = document.getElementById('awSubjectName').value.trim();
+                const icon = document.getElementById('awSubjectIcon').value.trim() || 'fa-book';
+                const desc = document.getElementById('awSubjectDesc').value.trim();
+                if (!name) { showToast('يرجى إدخال اسم المادة', 'warning'); return; }
+                showSpinner('جاري الإضافة...');
+                try {
+                    await db.collection('subjects').add({ name, icon, description: desc, order: Date.now() });
+                    showToast('تمت إضافة المادة بنجاح', 'success');
+                    if (typeof closeAdminWidget === 'function') closeAdminWidget();
+                    await loadSubjects();
+                } catch (e) {
+                    console.error(e);
+                    showToast('حدث خطأ', 'error');
+                }
+                hideSpinner();
+            });
+        };
+
+        async function deleteSubject(id) {
+            const confirmed = await showConfirmModal({
+                title: 'تأكيد الحذف',
+                message: 'هل أنت متأكد من حذف هذه المادة؟ لن يتم حذف الكتب المرتبطة بها تلقائياً.',
+                confirmText: 'حذف',
+                cancelText: 'إلغاء'
+            });
+            if (!confirmed) return;
+            showSpinner('جاري الحذف...');
+            try {
+                await db.collection('subjects').doc(id).delete();
+                showToast('تم حذف المادة', 'success');
+                await loadSubjects();
+            } catch (e) {
+                showToast('حدث خطأ في الحذف', 'error');
+            }
+            hideSpinner();
+        }
+
+        // إعادة تحميل المواد عند تغيّر حالة الدخول (لإظهار/إخفاء أزرار الحذف)
+        document.addEventListener('admin:statechange', () => loadSubjects());
+
+        // ============================================================
+        // تحميل المواد من Firestore (مجموعة subjects)
+        // ============================================================
+        async function loadSubjects() {
+            const grid = document.getElementById('subjectsGrid');
+            try {
+                const snap = await db.collection('subjects').orderBy('order', 'asc').get();
+
+                if (snap.empty) {
+                    grid.innerHTML = `
+                        <div class="no-subjects-msg">
+                            <i class="fas fa-book-open"></i>
+                            <p>لا توجد مواد مضافة بعد. سيتم إضافتها قريباً من لوحة التحكم.</p>
+                        </div>`;
+                    return;
+                }
+
+                let html = '';
+                const admin = isAdminNow();
+                snap.forEach(doc => {
+                    const s = doc.data();
+                    const icon = s.icon || 'fa-book';
+                    const deleteBtn = admin
+                        ? `<button class="comment-delete-btn" data-id="${doc.id}" title="حذف المادة" style="position:absolute; top:10px; left:10px;"><i class="fas fa-trash"></i></button>`
+                        : '';
+                    html += `
+                        <div class="subject-card" data-subject="${escapeHtml(s.name)}" style="position:relative;">
+                            ${deleteBtn}
+                            <div class="subject-icon"><i class="fas ${icon}"></i></div>
+                            <h3>${escapeHtml(s.name)}</h3>
+                            <p>${escapeHtml(s.description || 'اضغط لعرض الكتب والمراجع')}</p>
+                        </div>`;
+                });
+                grid.innerHTML = html;
+
+                document.querySelectorAll('.subject-card').forEach(card => {
+                    card.addEventListener('click', () => openResourcesModal(card.dataset.subject));
+                });
+                document.querySelectorAll('.subject-card .comment-delete-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        deleteSubject(btn.dataset.id);
+                    });
+                });
+            } catch (e) {
+                console.error('Error loading subjects:', e);
+                grid.innerHTML = `
+                    <div class="no-subjects-msg">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>حدث خطأ في تحميل المواد. حاول تحديث الصفحة.</p>
+                    </div>`;
+            }
+        }
+
+        // ============================================================
+        // مودال الموارد: يعرض كتب المادة المختارة (مجموعة books)
+        // ============================================================
+        let currentModalSubject = null;
+
+        async function openResourcesModal(subjectName) {
+            currentModalSubject = subjectName;
+            const modal = document.getElementById('resourcesModal');
+            const title = document.getElementById('modalTitle');
+
+            title.textContent = `موارد مادة: ${subjectName}`;
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+
+            await renderBooksList(subjectName);
+        }
+
+        async function renderBooksList(subjectName) {
+            const loading = document.getElementById('resourcesLoading');
+            const list = document.getElementById('resourcesList');
+            const admin = isAdminNow();
+
+            list.innerHTML = '';
+            loading.style.display = 'block';
+
+            try {
+                const snap = await db.collection('books').where('subject', '==', subjectName).get();
+                loading.style.display = 'none';
+
+                let html = admin ? `
+                    <div class="add-book-form" style="background:rgba(0,0,0,0.03); padding:16px; border-radius:var(--radius-sm); margin-bottom:18px;">
+                        <h4 style="margin-bottom:10px; font-size:0.95rem;"><i class="fas fa-plus-circle"></i> إضافة كتاب لهذه المادة</h4>
+                        <div class="form-group"><input type="text" id="awBookName" placeholder="اسم الكتاب" /></div>
+                        <div class="form-group"><input type="text" id="awBookYear" placeholder="السنة (مثال: 2025)" /></div>
+                        <div class="form-group"><input type="file" id="awBookFile" accept=".pdf" /></div>
+                        <button class="btn-submit" id="awAddBookBtn"><i class="fas fa-plus"></i> إضافة كتاب</button>
+                    </div>
+                ` : '';
+
+                if (snap.empty) {
+                    html += `
+                        <div class="no-resources-msg">
+                            <i class="fas fa-folder-open"></i>
+                            <p>لا توجد كتب مضافة لهذه المادة بعد.</p>
+                        </div>`;
+                } else {
+                    snap.forEach(doc => {
+                        const b = doc.data();
+                        const deleteBtn = admin
+                            ? `<button class="comment-delete-btn" data-id="${doc.id}" title="حذف الكتاب"><i class="fas fa-trash"></i></button>`
+                            : '';
+                        html += `
+                            <div class="resource-item">
+                                <div>
+                                    <h4>${escapeHtml(b.name)}</h4>
+                                    <span>${escapeHtml(String(b.year || ''))}</span>
+                                </div>
+                                <div class="pdf-actions">
+                                    <button class="view-pdf-btn" data-pdf="${b.link}" data-title="${escapeHtml(b.name)}"><i class="fas fa-eye"></i> عرض</button>
+                                    <button class="download-btn" data-url="${b.link}" data-filename="${escapeHtml(b.fileName || (b.name + '.pdf'))}"><i class="fas fa-download"></i> تنزيل</button>
+                                    ${deleteBtn}
+                                </div>
+                            </div>`;
+                    });
+                }
+                list.innerHTML = html;
+
+                list.querySelectorAll('.view-pdf-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        openPDFViewer(btn.dataset.pdf, btn.dataset.title);
+                    });
+                });
+                list.querySelectorAll('.download-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        downloadWithWatermark(btn.dataset.url, btn.dataset.filename);
+                    });
+                });
+                list.querySelectorAll('.comment-delete-btn').forEach(btn => {
+                    btn.addEventListener('click', () => deleteBook(btn.dataset.id, subjectName));
+                });
+                const addBookBtn = document.getElementById('awAddBookBtn');
+                if (addBookBtn) {
+                    addBookBtn.addEventListener('click', () => addBook(subjectName));
+                }
+            } catch (e) {
+                console.error('Error loading resources:', e);
+                loading.style.display = 'none';
+                list.innerHTML = `
+                    <div class="no-resources-msg">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>حدث خطأ في تحميل الموارد.</p>
+                    </div>`;
+            }
+        }
+
+        async function addBook(subjectName) {
+            const name = document.getElementById('awBookName').value.trim();
+            const year = document.getElementById('awBookYear').value.trim();
+            const fileInput = document.getElementById('awBookFile');
+            if (!name || !year) { showToast('يرجى ملء اسم الكتاب والسنة', 'warning'); return; }
+            if (!fileInput.files.length) { showToast('يرجى اختيار ملف PDF', 'warning'); return; }
+            const file = fileInput.files[0];
+            if (file.type !== 'application/pdf') { showToast('يرجى اختيار ملف PDF', 'warning'); return; }
+
+            showSpinner('جاري رفع الملف...');
+            try {
+                const path = `books/${subjectName}_${name}_${Date.now()}.pdf`;
+                const url = await uploadFile(file, path);
+                await db.collection('books').add({ subject: subjectName, name, year, link: url, fileName: file.name });
+                showToast('تمت إضافة الكتاب بنجاح', 'success');
+                await renderBooksList(subjectName);
+            } catch (e) {
+                console.error(e);
+                showToast('حدث خطأ في الرفع', 'error');
+            }
+            hideSpinner();
+        }
+
+        async function deleteBook(id, subjectName) {
+            const confirmed = await showConfirmModal({
+                title: 'تأكيد الحذف',
+                message: 'هل أنت متأكد من حذف هذا الكتاب؟',
+                confirmText: 'حذف',
+                cancelText: 'إلغاء'
+            });
+            if (!confirmed) return;
+            showSpinner('جاري الحذف...');
+            try {
+                await db.collection('books').doc(id).delete();
+                showToast('تم حذف الكتاب', 'success');
+                await renderBooksList(subjectName);
+            } catch (e) {
+                showToast('حدث خطأ في الحذف', 'error');
+            }
+            hideSpinner();
+        }
+
+        // إعادة رسم قائمة الكتب إذا كانت النافذة مفتوحة عند تغيّر حالة الدخول
+        document.addEventListener('admin:statechange', () => {
+            if (currentModalSubject && document.getElementById('resourcesModal').classList.contains('show')) {
+                renderBooksList(currentModalSubject);
+            }
+        });
+
+        document.getElementById('closeModal').addEventListener('click', () => {
+            document.getElementById('resourcesModal').classList.remove('show');
+            document.body.style.overflow = 'auto';
+        });
+        document.getElementById('resourcesModal').addEventListener('click', (e) => {
+            if (e.target.id === 'resourcesModal') {
+                e.target.classList.remove('show');
+                document.body.style.overflow = 'auto';
+            }
+        });
+
+        // ============================================================
+        // أحداث عامة مشتركة (تمرير، قائمة جانبية، وضع مظلم)
+        // ============================================================
+        window.addEventListener('scroll', () => {
+            const win = window.scrollY;
+            const h = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            document.getElementById('progressBar').style.width = (win / h) * 100 + '%';
+            document.getElementById('backToTop').classList.toggle('show', win > 300);
+            document.getElementById('mainHeader').classList.toggle('scrolled', win > 50);
+        });
+        document.getElementById('backToTop').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+        const hamburger = document.getElementById('hamburgerMenu');
+        const sidebar = document.getElementById('sidebarMenu');
+        const overlayMenu = document.getElementById('menuOverlay');
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('open');
+            sidebar.classList.toggle('open');
+            overlayMenu.classList.toggle('active');
+            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : 'auto';
+        });
+        overlayMenu.addEventListener('click', () => {
+            hamburger.classList.remove('open');
+            sidebar.classList.remove('open');
+            overlayMenu.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        });
+
+        document.getElementById('developerName').addEventListener('click', () => {
+            window.open('https://www.facebook.com/med.ahmed.92372', '_blank');
+        });
+
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+        }
+        const themeToggle = document.createElement('button');
+        themeToggle.id = 'themeToggle';
+        themeToggle.style.cssText =
+            'position:fixed;bottom:170px;left:30px;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.15);color:white;font-size:1.2rem;cursor:pointer;z-index:998;display:flex;align-items:center;justify-content:center;';
+        document.body.appendChild(themeToggle);
+        function updateThemeIcon() {
+            const isDark = document.body.classList.contains('dark-mode');
+            themeToggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        }
+        updateThemeIcon();
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            updateThemeIcon();
+        });
+
+        // ============================================================
+        // بدء التشغيل
+        // ============================================================
+        loadSubjects();
+    </script>
+
+    <!-- ===== الملفات المشتركة (نفس النظام يُستخدم في كل صفحات الموقع) ===== -->
+    <script src="pdf-viewer.js"></script>
+    <script src="download.js"></script>
+    <script src="comments.js"></script>
+    <script src="icon-picker.js"></script>
+    <script src="admin-widget.js"></script>
+</body>
+</html>

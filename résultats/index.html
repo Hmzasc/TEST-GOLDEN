@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golden Bac - نتائج الامتحانات</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        /* إضافة أنماط خاصة بالصفحة */
+        .results-hero {
+            background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+            color: white;
+            padding: 60px 0;
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        .results-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" opacity="0.1"><path d="M 0 0 L 200 0 L 200 200 L 0 200 Z" fill="none" stroke="%23f8b739" stroke-width="2"/><circle cx="100" cy="100" r="40" fill="none" stroke="%23f8b739" stroke-width="2"/></svg>');
+            background-size: 50px 50px;
+            animation: moveBackground 20s linear infinite;
+        }
+        @keyframes moveBackground {
+            0% { background-position: 0 0; }
+            100% { background-position: 100px 100px; }
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            padding: 20px 0 60px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .result-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid transparent;
+            text-decoration: none;
+            color: var(--text-color);
+            display: block;
+            position: relative;
+            overflow: hidden;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+        .dark-mode .result-card {
+            background: rgba(26, 37, 48, 0.95);
+        }
+        .result-card:hover {
+            transform: translateY(-15px) rotateY(2deg);
+            border-color: var(--primary-color);
+            box-shadow: 0 40px 60px -15px rgba(248, 183, 57, 0.4);
+        }
+        .result-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(248, 183, 57, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+        .result-card:hover::before {
+            opacity: 1;
+        }
+
+        .result-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, var(--primary-color), #ffde7d);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            font-size: 3rem;
+            color: var(--secondary-color);
+            transition: all 0.4s ease;
+            box-shadow: 0 10px 20px rgba(248, 183, 57, 0.3);
+        }
+        .result-card:hover .result-icon {
+            transform: scale(1.1) rotate(10deg);
+            box-shadow: 0 15px 30px rgba(248, 183, 57, 0.5);
+        }
+
+        .result-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: var(--secondary-color);
+            font-weight: 700;
+        }
+        .dark-mode .result-card h3 {
+            color: var(--dark-color);
+        }
+
+        .result-card p {
+            color: var(--text-light);
+            font-size: 1rem;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .result-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent-color), #4a3eff);
+            color: white;
+            padding: 8px 25px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .result-card:hover .result-badge {
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            border-color: white;
+        }
+
+        /* تأثير الجسيمات العائمة */
+        .particles-float {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .particle {
+            position: absolute;
+            background: rgba(248, 183, 57, 0.2);
+            border-radius: 50%;
+            animation: floatParticle 15s infinite linear;
+        }
+        @keyframes floatParticle {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .results-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .result-card {
+                padding: 30px 15px;
+            }
+            .result-icon {
+                width: 100px;
+                height: 100px;
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- الجسيمات المتحركة (تضاف عبر JS) -->
+    <div class="particles-float" id="particles"></div>
+
+    <!-- Spinner/Loader (موجود في الصفحات الأخرى) -->
+    <div class="spinner-overlay" id="spinnerOverlay">
+        <div>
+            <div class="spinner">
+                <div class="spinner-dot"></div><div class="spinner-dot"></div><div class="spinner-dot"></div>
+                <div class="spinner-dot"></div><div class="spinner-dot"></div><div class="spinner-dot"></div>
+                <div class="spinner-dot"></div><div class="spinner-dot"></div>
+            </div>
+            <div class="spinner-text">جاري التحميل...</div>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- Header (نفس الهيكل الموجود) -->
+    <header id="mainHeader">
+        <div class="container header-content">
+            <div class="logo-container">
+                <div class="logo"><img src="../golden.png" alt="شعار Golden Bac"></div>
+                <div class="logo-text"><h1>Golden Bac</h1><p>مركز كولدن باك</p></div>
+            </div>
+            <div class="hamburger-menu" id="hamburgerMenu">
+                <div class="hamburger-icon"><span></span><span></span><span></span></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Menu (مع إضافة رابط النتائج) -->
+    <div class="sidebar-menu" id="sidebarMenu">
+        <div style="display:flex; gap:35px;">
+            <div class="logo"><img src="../golden.png" alt="شعار"></div>
+            <div class="logo-text"><h1>Golden Bac</h1><p>كولدن باك</p></div>
+            <button class="theme-toggle-sidebar" id="themeToggleSidebar"><i class="fas fa-moon"></i></button>
+        </div><br>
+        <div class="sidebar-header"><h2 class="sidebar-title">القائمة الرئيسية</h2></div>
+        <ul class="menu-items">
+            <li class="menu-item"><a href="../index.html"><i class="fas fa-home"></i><span>الرئيسية</span></a></li>
+            <li class="menu-item"><a href="../subjects.html"><i class="fas fa-book-open"></i><span>المواد الدراسية</span></a></li>
+            <li class="menu-item"><a href="../exams.html"><i class="fas fa-file-alt"></i><span>الامتحانات</span></a></li>
+            <li class="menu-item"><a href="../tips.html"><i class="fas fa-lightbulb"></i><span>نصائح للنجاح</span></a></li>
+            <li class="menu-item"><a href="../location.html"><i class="fas fa-map-marker-alt"></i><span>موقع المركز</span></a></li>
+            <li class="menu-item"><a href="../inquiry.html"><i class="fas fa-envelope"></i><span>استفسارات</span></a></li>
+            <li class="menu-item"><a href="index.html" class="active"><i class="fas fa-chart-line"></i><span>النتائج</span></a></li>
+        </ul>
+    </div>
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <!-- Hero Section -->
+    <section class="results-hero">
+        <div class="container">
+            <h1>📊 نتائج الامتحانات الرسمية</h1>
+            <p>اختر الامتحان الذي تريد الاستعلام عن نتيجته</p>
+        </div>
+    </section>
+
+    <!-- بطاقات الاختيار -->
+    <section class="container">
+        <div class="results-grid">
+            <a href="concours.html" class="result-card">
+                <div class="result-icon"><i class="fas fa-child"></i></div>
+                <h3>الكونكور</h3>
+                <p>نتائج مسابقة دخول الإعدادية (السادس ابتدائي)</p>
+                <span class="result-badge">استعلام <i class="fas fa-arrow-left"></i></span>
+            </a>
+            <a href="bepc.html" class="result-card">
+                <div class="result-icon"><i class="fas fa-school"></i></div>
+                <h3>البريفة</h3>
+                <p>نتائج شهادة ختم الدروس الإعدادية</p>
+                <span class="result-badge">استعلام <i class="fas fa-arrow-left"></i></span>
+            </a>
+            <a href="bac.html" class="result-card">
+                <div class="result-icon"><i class="fas fa-graduation-cap"></i></div>
+                <h3>الباكلوريا</h3>
+                <p>الدورة العادية والتكميلية (الثانية)</p>
+                <span class="result-badge">استعلام <i class="fas fa-arrow-left"></i></span>
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer (نفس الفوتر المحسن مع إضافة رابط النتائج) -->
+    <footer>
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-logo">
+                    <img src="../golden.png" alt="Golden Bac">
+                    <h3>Golden Bac</h3>
+                    <p>مركز كولدن باك التعليمي</p>
+                </div>
+                <div class="footer-social">
+                    <a href="#" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                    <a href="#" target="_blank"><i class="fab fa-telegram-plane"></i></a>
+                    <a href="mailto:centergolden04@gmail.com"><i class="fas fa-envelope"></i></a>
+                </div>
+            </div>
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h4>روابط سريعة</h4>
+                    <ul>
+                        <li><a href="../index.html"><i class="fas fa-angle-left"></i> الرئيسية</a></li>
+                        <li><a href="../subjects.html"><i class="fas fa-angle-left"></i> المواد الدراسية</a></li>
+                        <li><a href="../exams.html"><i class="fas fa-angle-left"></i> الامتحانات</a></li>
+                        <li><a href="../tips.html"><i class="fas fa-angle-left"></i> نصائح</a></li>
+                        <li><a href="../location.html"><i class="fas fa-angle-left"></i> موقع المركز</a></li>
+                        <li><a href="../inquiry.html"><i class="fas fa-angle-left"></i> استفسارات</a></li>
+                        <li><a href="index.html"><i class="fas fa-angle-left"></i> النتائج</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>عن المركز</h4>
+                    <p>مركز Golden Bac يهدف إلى تقديم أفضل الدعم التعليمي لطلاب البكالوريا في موريتانيا من خلال توفير المصادر التعليمية اللازمة للنجاح.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>اتصل بنا</h4>
+                    <ul class="contact-info">
+                        <li><i class="fas fa-map-marker-alt"></i> نواكشوط، عرفات - قرب مجمع بلادي</li>
+                        <li><i class="fas fa-phone"></i> <a href="tel:+22234987117">+222 34 98 71 17</a></li>
+                        <li><i class="fas fa-phone"></i> <a href="tel:+22248359510">+222 48 35 95 10</a></li>
+                        <li><i class="fas fa-envelope"></i> <a href="mailto:centergolden04@gmail.com">centergolden04@gmail.com</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>تم التطوير بواسطة: <strong>حمزة سيدي</strong> &copy; 2026 | جميع الحقوق محفوظة لمركز Golden Bac</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back to Top -->
+    <button class="back-to-top" id="backToTop"><i class="fas fa-arrow-up"></i></button>
+
+    <script src="../script.js"></script>
+    <script>
+        // إنشاء جسيمات عائمة
+        const particlesContainer = document.getElementById('particles');
+        for (let i = 0; i < 30; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            const size = Math.random() * 8 + 4;
+            particle.style.width = `${size}px`;
+            particle.style.height = `${size}px`;
+            particle.style.left = `${Math.random() * 100}%`;
+            particle.style.bottom = `-${size}px`;
+            particle.style.animationDuration = `${Math.random() * 10 + 10}s`;
+            particle.style.animationDelay = `${Math.random() * 5}s`;
+            particlesContainer.appendChild(particle);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+    <title>Golden Bac - الامتحانات السابقة</title>
+
+    <!-- ===== FONTS & ICONS ===== -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
+
+    <!-- ===== ملف الأنماط المشترك لكل صفحات الموقع ===== -->
+    <link rel="stylesheet" href="styles.css" />
+
+    <!-- ===== FIREBASE ===== -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+    <!-- ===== pdf.js لعرض الملفات + pdf-lib للعلامة المائية عند التنزيل ===== -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+</head>
+<body>
+
+    <!-- ===== SPINNER ===== -->
+    <div class="spinner-overlay" id="spinnerOverlay">
+        <div class="spinner-dots"><span></span><span></span><span></span></div>
+        <div class="spinner-text" id="spinnerText">جاري التحميل...</div>
+    </div>
+
+    <!-- ===== PROGRESS BAR ===== -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- ===== HEADER ===== -->
+    <header id="mainHeader">
+        <div class="container header-content">
+            <div class="logo-container">
+                <div class="logo"><img src="golden.png" alt="Golden Bac" /></div>
+                <div class="logo-text"><h1>Golden Bac</h1><p>مركز كولدن باك</p></div>
+            </div>
+            <button class="hamburger-menu" id="hamburgerMenu" aria-label="القائمة">
+                <div class="hamburger-icon"><span></span><span></span><span></span></div>
+            </button>
+        </div>
+    </header>
+
+    <!-- ===== SIDEBAR ===== -->
+    <div class="sidebar-menu" id="sidebarMenu">
+        <div class="logo-container">
+            <div class="logo"><img src="golden.png" alt="Golden Bac" /></div>
+            <div class="logo-text"><h1>Golden Bac</h1><p>كولدن باك</p></div>
+        </div>
+        <ul class="menu-items">
+            <li class="menu-item"><a href="index.html"><i class="fas fa-home"></i><span>الرئيسية</span></a></li>
+            <li class="menu-item"><a href="subjects.html"><i class="fas fa-book-open"></i><span>المواد الدراسية</span></a></li>
+            <li class="menu-item"><a href="exams.html" class="active"><i class="fas fa-file-alt"></i><span>الامتحانات</span></a></li>
+            <li class="menu-item"><a href="tips.html"><i class="fas fa-lightbulb"></i><span>نصائح للنجاح</span></a></li>
+            <li class="menu-item"><a href="serie.html"><i class="fas fa-folder-open"></i><span>مواضيع المركز (سلسلة)</span></a></li>
+            <li class="menu-item"><a href="location.html"><i class="fas fa-map-marker-alt"></i><span>موقع المركز</span></a></li>
+            <li class="menu-item"><a href="inquiry.html"><i class="fas fa-envelope"></i><span>استفسارات</span></a></li>
+        </ul>
+    </div>
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <!-- ===== الامتحانات ===== -->
+    <section class="exams-section" id="exams">
+        <div class="container">
+            <div class="section-title">
+                <h2>امتحانات البكالوريا السابقة</h2>
+                <p class="section-subtitle">اختر السنة لعرض امتحانات البكالوريا للسنوات السابقة</p>
+            </div>
+            <div class="years-tabs" id="yearsTabs"></div>
+            <div class="exams-grid" id="examsContainer">
+                <div class="exams-loading"><i class="fas fa-spinner fa-spin"></i> جاري تحميل الامتحانات...</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== مودال عارض PDF ===== -->
+    <div class="pdf-modal" id="pdfModal">
+        <div class="pdf-modal-content">
+            <div class="pdf-modal-header">
+                <h3 id="pdfTitle">عرض الملف</h3>
+                <button class="pdf-modal-close" id="pdfCloseBtn">&times;</button>
+            </div>
+            <div class="pdf-modal-body">
+                <div class="pdf-toolbar">
+                    <div class="pdf-toolbar-group">
+                        <button class="pdf-tool-btn" id="prevPageBtn"><i class="fas fa-arrow-right"></i> السابق</button>
+                        <span class="pdf-page-info">صفحة <span id="currentPage">1</span> من <span id="totalPages">1</span></span>
+                        <button class="pdf-tool-btn" id="nextPageBtn">التالي <i class="fas fa-arrow-left"></i></button>
+                    </div>
+                    <div class="pdf-toolbar-group">
+                        <button class="pdf-tool-btn" id="rotateLeftBtn"><i class="fas fa-undo"></i> لليسار</button>
+                        <button class="pdf-tool-btn" id="rotateRightBtn">لليمين <i class="fas fa-redo"></i></button>
+                        <button class="pdf-tool-btn" id="zoomOutBtn"><i class="fas fa-search-minus"></i></button>
+                        <button class="pdf-tool-btn" id="zoomInBtn"><i class="fas fa-search-plus"></i></button>
+                        <a href="#" id="pdfDownload" class="pdf-tool-btn" download><i class="fas fa-download"></i> تنزيل</a>
+                    </div>
+                </div>
+                <div class="pdf-canvas-container">
+                    <div class="pdf-loading" id="pdfLoading"><div class="pdf-spinner"></div><p>جاري تحميل الملف...</p></div>
+                    <canvas id="pdf-canvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== COMMENTS ===== -->
+    <section class="comments-section" id="comments">
+        <div class="container">
+            <div class="comments-container">
+                <div class="comments-header">
+                    <i class="fas fa-comments"></i>
+                    <h2>💬 التعليقات</h2>
+                    <span class="comments-badge" id="commentsCount">0</span>
+                </div>
+                <div class="add-comment-form">
+                    <div class="form-group"><i class="fas fa-user"></i><input type="text" id="userName" placeholder="اسمك (اختياري)" maxlength="50" /></div>
+                    <div class="form-group"><i class="fas fa-comment-dots"></i><textarea id="commentText" placeholder="اكتب تعليقك هنا..." rows="4" maxlength="500"></textarea></div>
+                    <button class="submit-comment-btn" id="submitCommentBtn"><i class="fas fa-paper-plane"></i> إرسال التعليق</button>
+                </div>
+                <div class="comments-list" id="commentsList"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== BACK TO TOP ===== -->
+    <button class="back-to-top" id="backToTop"><i class="fas fa-arrow-up"></i></button>
+
+    <!-- ===== FOOTER ===== -->
+    <footer>
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-logo"><img src="golden.png" alt="Golden Bac" /><div><h3>Golden Bac</h3><p>مركز كولدن باك التعليمي</p></div></div>
+                <div class="footer-social">
+                    <a href="https://www.facebook.com/med.ahmed.92372" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                    <a href="https://wa.me/22234987117" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                    <a href="https://t.me/goldenbaccenter" target="_blank"><i class="fab fa-telegram-plane"></i></a>
+                    <a href="mailto:centergolden04@gmail.com"><i class="fas fa-envelope"></i></a>
+                </div>
+            </div>
+            <div class="footer-grid">
+                <div class="footer-section"><h4>روابط سريعة</h4><ul><li><a href="index.html"><i class="fas fa-angle-left"></i> الرئيسية</a></li><li><a href="subjects.html"><i class="fas fa-angle-left"></i> المواد الدراسية</a></li><li><a href="exams.html"><i class="fas fa-angle-left"></i> الامتحانات</a></li><li><a href="tips.html"><i class="fas fa-angle-left"></i> نصائح</a></li><li><a href="location.html"><i class="fas fa-angle-left"></i> موقع المركز</a></li><li><a href="inquiry.html"><i class="fas fa-angle-left"></i> استفسارات</a></li></ul></div>
+                <div class="footer-section"><h4>عن المركز</h4><p>مركز Golden Bac يهدف إلى تقديم أفضل الدعم التعليمي لطلاب البكالوريا في موريتانيا.</p></div>
+                <div class="footer-section"><h4>اتصل بنا</h4><ul class="contact-info"><li><i class="fas fa-map-marker-alt"></i> نواكشوط، عرفات – قرب مجمع بلادي</li><li><i class="fas fa-phone"></i> <a href="tel:+22234987117">+222 34 98 71 17</a></li><li><i class="fas fa-phone"></i> <a href="tel:+22248359510">+222 48 35 95 10</a></li><li><i class="fas fa-envelope"></i> <a href="mailto:centergolden04@gmail.com">centergolden04@gmail.com</a></li></ul></div>
+            </div>
+            <div class="footer-bottom"><p>تم التطوير بواسطة: <strong id="developerName">حمزة سيدي</strong> &copy; 2026 | جميع الحقوق محفوظة لمركز Golden Bac</p></div>
+        </div>
+    </footer>
+
+    <script>
+        // ============================================================
+        // FIREBASE CONFIG (نفس إعدادات باقي صفحات الموقع)
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyD1n9k7aUhJE0BKcxuY7Inn8eNs11wXzSo",
+            authDomain: "golden-bac-c4bbd.firebaseapp.com",
+            projectId: "golden-bac-c4bbd",
+            storageBucket: "golden-bac-c4bbd.firebasestorage.app",
+            messagingSenderId: "299761998753",
+            appId: "1:299761998753:web:f1b648084c4e0a5b1f49e0"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        // ملاحظة: تعريف auth هنا ضروري حتى تعرف هذه الصفحة أن المسؤول
+        // مسجّل دخوله (إن كان قد سجّل دخوله من صفحة أخرى مثل index.html)
+        // فتظهر له أزرار حذف التعليقات هنا أيضاً تلقائياً.
+
+        // ============================================================
+        // دوال مساعدة (مطابقة لباقي صفحات الموقع)
+        // ============================================================
+        function showToast(message, type = 'success', duration = 4000) {
+            const old = document.querySelector('.golden-toast');
+            if (old) old.remove();
+            const toast = document.createElement('div');
+            toast.className = `golden-toast toast-${type}`;
+            const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle',
+                info: 'fa-info-circle' };
+            toast.innerHTML = `
+            <i class="fas ${icons[type] || icons.info} toast-icon"></i>
+            <span>${message}</span>
+            <button class="toast-close"><i class="fas fa-times"></i></button>
+          `;
+            document.body.appendChild(toast);
+            toast.querySelector('.toast-close').addEventListener('click', () => {
+                toast.style.animation = 'toastOut 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            });
+            setTimeout(() => {
+                if (toast.isConnected) {
+                    toast.style.animation = 'toastOut 0.3s ease forwards';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, duration);
+        }
+
+        function showSpinner(text = 'جاري التحميل...') {
+            document.getElementById('spinnerText').textContent = text;
+            document.getElementById('spinnerOverlay').classList.add('active');
+        }
+        function hideSpinner() {
+            document.getElementById('spinnerOverlay').classList.remove('active');
+        }
+
+        function escapeHtml(text) {
+            const d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
+
+        // ============================================================
+        // إعدادات Cloudinary (رفع ملفات PDF الخاصة بالامتحانات)
+        // ============================================================
+        const ADMIN_EMAIL = 'centergolden04@gmail.com';
+        const CLOUDINARY_CLOUD_NAME = 'ktudy585';
+        const CLOUDINARY_UPLOAD_PRESET = 'Center';
+        const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`;
+
+        function isAdminNow() {
+            return !!(auth.currentUser && auth.currentUser.email === ADMIN_EMAIL);
+        }
+
+        function uploadFile(file, path) {
+            return new Promise((resolve, reject) => {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+                if (path) {
+                    const folder = path.includes('/') ? path.substring(0, path.lastIndexOf('/')) : '';
+                    if (folder) formData.append('folder', folder);
+                }
+                fetch(CLOUDINARY_UPLOAD_URL, { method: 'POST', body: formData })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.secure_url) resolve(data.secure_url);
+                        else reject(new Error(data.error ? data.error.message : 'فشل الرفع'));
+                    })
+                    .catch(reject);
+            });
+        }
+
+        // ============================================================
+        // محتوى لوحة الإضافة العائمة الخاصة بهذه الصفحة (admin-widget.js)
+        // ============================================================
+        window.getAdminPanelHTML = function () {
+            return `
+                <h4 style="margin-bottom:12px;">📝 إضافة امتحان جديد</h4>
+                <div class="form-group"><label>السنة</label><input type="number" id="awExamYear" placeholder="مثال: 2025" /></div>
+                <div class="form-group"><label>المادة</label><input type="text" id="awExamSubject" placeholder="مثال: الرياضيات" /></div>
+                <div class="form-group"><label>ملف PDF (اختر من جهازك)</label><input type="file" id="awExamFile" accept=".pdf" /></div>
+                <button class="btn-submit" id="awAddExamBtn"><i class="fas fa-plus"></i> إضافة امتحان</button>
+            `;
+        };
+
+        window.bindAdminPanelEvents = function () {
+            document.getElementById('awAddExamBtn').addEventListener('click', async () => {
+                const year = document.getElementById('awExamYear').value.trim();
+                const subject = document.getElementById('awExamSubject').value.trim();
+                const fileInput = document.getElementById('awExamFile');
+                if (!year || !subject) { showToast('يرجى ملء السنة والمادة', 'warning'); return; }
+                if (!fileInput.files.length) { showToast('يرجى اختيار ملف PDF', 'warning'); return; }
+                const file = fileInput.files[0];
+                if (file.type !== 'application/pdf') { showToast('يرجى اختيار ملف PDF', 'warning'); return; }
+
+                showSpinner('جاري رفع الملف...');
+                try {
+                    const path = `exams/${year}_${subject}_${Date.now()}.pdf`;
+                    const url = await uploadFile(file, path);
+                    await db.collection('exams').add({ year: parseInt(year), subject, pdf: url, fileName: file.name });
+                    showToast('تم إضافة الامتحان بنجاح', 'success');
+                    if (typeof closeAdminWidget === 'function') closeAdminWidget();
+                    await loadExamsFromFirestore();
+                } catch (e) {
+                    console.error(e);
+                    showToast('حدث خطأ في الرفع', 'error');
+                }
+                hideSpinner();
+            });
+        };
+
+        async function deleteExam(id) {
+            const confirmed = await showConfirmModal({
+                title: 'تأكيد الحذف',
+                message: 'هل أنت متأكد من حذف هذا الامتحان؟',
+                confirmText: 'حذف',
+                cancelText: 'إلغاء'
+            });
+            if (!confirmed) return;
+            showSpinner('جاري الحذف...');
+            try {
+                await db.collection('exams').doc(id).delete();
+                showToast('تم حذف الامتحان', 'success');
+                await loadExamsFromFirestore();
+            } catch (e) {
+                showToast('حدث خطأ في الحذف', 'error');
+            }
+            hideSpinner();
+        }
+
+        // إعادة رسم الامتحانات عند تغيّر حالة الدخول (لإظهار/إخفاء أزرار الحذف)
+        document.addEventListener('admin:statechange', () => {
+            if (typeof examsByYear !== 'undefined') buildExamsCards(Object.keys(examsByYear).sort((a, b) => b - a));
+        });
+
+        // ============================================================
+        // عرض ملف PDF: تتم معالجتها بالكامل بواسطة pdf-viewer.js
+        // (المودال الموجود أعلى الصفحة)، المُحمَّل في نهاية الملف.
+        // ============================================================
+
+        // ============================================================
+        // تحميل الامتحانات الحقيقية من Firestore (مجموعة exams)
+        // كل وثيقة تحتوي: year, subject, pdf (رابط Cloudinary)
+        // ============================================================
+        let examsByYear = {};
+
+        async function loadExamsFromFirestore() {
+            const tabsContainer = document.getElementById('yearsTabs');
+            const examsContainer = document.getElementById('examsContainer');
+            try {
+                const snap = await db.collection('exams').orderBy('year', 'desc').get();
+
+                examsByYear = {};
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    if (!d.year || !d.subject || !d.pdf) return;
+                    if (!examsByYear[d.year]) examsByYear[d.year] = [];
+                    examsByYear[d.year].push({ id: doc.id, name: d.subject, pdf: d.pdf, fileName: d.fileName });
+                });
+
+                const years = Object.keys(examsByYear).sort((a, b) => b - a);
+
+                if (years.length === 0) {
+                    tabsContainer.innerHTML = '';
+                    examsContainer.innerHTML = `
+                        <div class="no-exams-msg">
+                            <i class="fas fa-folder-open"></i>
+                            <p>لا توجد امتحانات مضافة بعد. سيتم إضافتها قريباً من لوحة التحكم.</p>
+                        </div>`;
+                    return;
+                }
+
+                buildYearTabs(years);
+                buildExamsCards(years);
+            } catch (e) {
+                console.error('Error loading exams:', e);
+                examsContainer.innerHTML = `
+                    <div class="no-exams-msg">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>حدث خطأ في تحميل الامتحانات. حاول تحديث الصفحة.</p>
+                    </div>`;
+            }
+        }
+
+        function buildYearTabs(years) {
+            const tabsContainer = document.getElementById('yearsTabs');
+            tabsContainer.innerHTML = '';
+            years.forEach((year, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'year-tab' + (index === 0 ? ' active' : '');
+                btn.textContent = year;
+                btn.dataset.year = year;
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.year-tab').forEach(tab => tab.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.querySelectorAll('.year-group').forEach(group => group.classList.remove('active-year'));
+                    const target = document.getElementById(`year-${year}`);
+                    if (target) target.classList.add('active-year');
+                });
+                tabsContainer.appendChild(btn);
+            });
+        }
+
+        function buildExamsCards(years) {
+            const container = document.getElementById('examsContainer');
+            const admin = isAdminNow();
+            container.innerHTML = '';
+            years.forEach((year, index) => {
+                const subjects = examsByYear[year];
+                const yearDiv = document.createElement('div');
+                yearDiv.className = 'year-group' + (index === 0 ? ' active-year' : '');
+                yearDiv.id = `year-${year}`;
+                yearDiv.innerHTML = `
+                    <div class="exam-card">
+                        <div class="exam-year">${year}</div>
+                        <div class="exam-content">
+                            <h4>امتحانات سنة ${year}</h4>
+                            <ul class="exam-list">
+                                ${subjects.map(sub => `
+                                    <li class="exam-list-item">
+                                        <span>${escapeHtml(sub.name)}</span>
+                                        <div class="exam-item-actions">
+                                            <button class="view-pdf-btn" data-pdf="${sub.pdf}" data-title="${escapeHtml(sub.name)}"><i class="fas fa-eye"></i> عرض</button>
+                                            <button class="download-btn" data-url="${sub.pdf}" data-filename="${escapeHtml(sub.fileName || (sub.name + '.pdf'))}"><i class="fas fa-download"></i> تنزيل</button>
+                                            ${admin ? `<button class="comment-delete-btn" data-id="${sub.id}" title="حذف الامتحان"><i class="fas fa-trash"></i></button>` : ''}
+                                        </div>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(yearDiv);
+            });
+            attachPDFEvents();
+            document.querySelectorAll('.exam-list-item .comment-delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => deleteExam(btn.dataset.id));
+            });
+            document.querySelectorAll('.exam-list-item .download-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    downloadWithWatermark(btn.dataset.url, btn.dataset.filename);
+                });
+            });
+        }
+
+        function attachPDFEvents() {
+            document.querySelectorAll('.view-pdf-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const b = e.currentTarget;
+                    openPDFViewer(b.getAttribute('data-pdf'), b.getAttribute('data-title'));
+                });
+            });
+        }
+
+        // ============================================================
+        // التعليقات
+        // تم نقل منطق التعليقات (عرض/إضافة/حذف) إلى ملف مشترك
+        // comments.js يُستخدم في كل صفحات الموقع، حتى يعمل حذف
+        // التعليقات لأي مسؤول مسجّل دخوله من أي صفحة بشكل موحّد.
+        // ============================================================
+
+        // ============================================================
+        // أحداث عامة مشتركة (تمرير، قائمة جانبية، وضع مظلم)
+        // ============================================================
+        window.addEventListener('scroll', () => {
+            const win = window.scrollY;
+            const h = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            document.getElementById('progressBar').style.width = (win / h) * 100 + '%';
+            document.getElementById('backToTop').classList.toggle('show', win > 300);
+            document.getElementById('mainHeader').classList.toggle('scrolled', win > 50);
+        });
+        document.getElementById('backToTop').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+        const hamburger = document.getElementById('hamburgerMenu');
+        const sidebar = document.getElementById('sidebarMenu');
+        const overlayMenu = document.getElementById('menuOverlay');
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('open');
+            sidebar.classList.toggle('open');
+            overlayMenu.classList.toggle('active');
+            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : 'auto';
+        });
+        overlayMenu.addEventListener('click', () => {
+            hamburger.classList.remove('open');
+            sidebar.classList.remove('open');
+            overlayMenu.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        });
+
+        document.getElementById('developerName').addEventListener('click', () => {
+            window.open('https://www.facebook.com/med.ahmed.92372', '_blank');
+        });
+
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+        }
+        const themeToggle = document.createElement('button');
+        themeToggle.id = 'themeToggle';
+        themeToggle.style.cssText =
+            'position:fixed;bottom:170px;left:30px;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.1);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.15);color:white;font-size:1.2rem;cursor:pointer;z-index:998;display:flex;align-items:center;justify-content:center;';
+        document.body.appendChild(themeToggle);
+        function updateThemeIcon() {
+            const isDark = document.body.classList.contains('dark-mode');
+            themeToggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+        }
+        updateThemeIcon();
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+            updateThemeIcon();
+        });
+
+        // ============================================================
+        // بدء التشغيل
+        // ============================================================
+        loadExamsFromFirestore();
+    </script>
+
+    <!-- ===== الملفات المشتركة (نفس النظام يُستخدم في كل صفحات الموقع) ===== -->
+    <!-- ===== الملفات المشتركة (نفس النظام يُستخدم في كل صفحات الموقع) ===== -->
+    <script src="pdf-viewer.js"></script>
+    <script src="download.js"></script>
+    <script src="comments.js"></script>
+    <script src="admin-widget.js"></script>
+</body>
+</html>

@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Golden Bac - ضبط الإحداثيات على الصورة</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(145deg, #0a0f1a 0%, #03050a 100%);
+            font-family: 'Cairo', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(0,0,0,0.5);
+            border-radius: 2rem;
+            padding: 1.5rem;
+            backdrop-filter: blur(3px);
+            border: 1px solid rgba(212,175,55,0.3);
+        }
+        .search-area {
+            background: rgba(0,0,0,0.6);
+            border-radius: 1.5rem;
+            padding: 1.2rem;
+            margin-bottom: 1.8rem;
+        }
+        .type-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        .type-btn {
+            flex: 1;
+            background: transparent;
+            border: 1px solid #d4af37;
+            padding: 8px;
+            border-radius: 50px;
+            color: #e0c87c;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .type-btn.active {
+            background: #d4af37;
+            color: #1e1a0c;
+            border-color: #d4af37;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        .input-group input {
+            padding: 12px 15px;
+            border-radius: 60px;
+            border: none;
+            background: #1e2432;
+            color: white;
+            font-size: 1rem;
+            font-family: 'Cairo', sans-serif;
+            text-align: center;
+        }
+        .search-btn {
+            background: linear-gradient(95deg, #d4af37, #b58d26);
+            border: none;
+            padding: 12px;
+            border-radius: 60px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            color: #0a0c12;
+            font-family: 'Cairo', sans-serif;
+            width: 100%;
+        }
+        .loader {
+            display: none;
+            text-align: center;
+            margin: 1rem 0;
+        }
+        .loader.active { display: block; }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(212,175,55,0.2);
+            border-top: 4px solid #d4af37;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .result-canvas-wrapper {
+            text-align: center;
+            background: #00000030;
+            border-radius: 28px;
+            padding: 10px;
+            display: none;
+        }
+        .result-canvas-wrapper.show { display: block; }
+        canvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+            border: 1px solid #d4af37;
+        }
+        .download-btn {
+            margin-top: 15px;
+            background: #1e2a36;
+            color: #d4af37;
+            border: 1px solid #d4af37;
+            padding: 8px 20px;
+            border-radius: 40px;
+            cursor: pointer;
+            display: inline-block;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.7rem;
+            color: #b9aa7a;
+        }
+        .coords-guide {
+            background: #0a0e14;
+            padding: 12px;
+            border-radius: 16px;
+            margin-top: 15px;
+            font-size: 0.7rem;
+            font-family: monospace;
+            direction: ltr;
+            text-align: left;
+            color: #d4af37;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div style="text-align: center; margin-bottom: 20px;">
+        <i class="fas fa-crown" style="font-size: 2rem; color: #d4af37;"></i>
+        <h2 style="color: #f3cf5a;">ضبط الإحداثيات على الصورة</h2>
+        <p style="color: #ccc;">أدخل أي رقم (مثلاً 1) لظهور البيانات الافتراضية على الصورة</p>
+    </div>
+
+    <div class="search-area">
+        <div class="type-toggle">
+            <button class="type-btn active" data-type="bac">عادية</button>
+            <button class="type-btn" data-type="bac2">تكميلية</button>
+        </div>
+        <div class="input-group">
+            <input type="text" id="numero" placeholder="رقم المترشح (مثال: 12345)">
+            <button class="search-btn" id="searchBtn"><i class="fas fa-search"></i> عرض النتيجة على الصورة</button>
+        </div>
+        <div class="loader" id="loader">
+            <div class="spinner"></div>
+            <p style="color:#d4af37;">جاري رسم البطاقة...</p>
+        </div>
+    </div>
+
+    <div class="result-canvas-wrapper" id="resultWrapper">
+        <canvas id="resultCanvas" width="600" height="800"></canvas>
+        <br>
+        <button class="download-btn" id="downloadBtn"><i class="fas fa-download"></i> تحميل البطاقة النهائية</button>
+    </div>
+    
+    <div class="coords-guide">
+        <strong>✏️ إحداثيات الحقول (عدل القيم حسب صورتك):</strong><br>
+        الاسم: { x: 280, y: 210 } | الرقم: { x: 280, y: 270 } | الشعبة: { x: 280, y: 330 }<br>
+        المؤسسة: { x: 280, y: 390 } | الولاية: { x: 280, y: 450 } | المركز: { x: 280, y: 510 }<br>
+        الدورة: { x: 280, y: 570 } | التاريخ: { x: 280, y: 630 } | المعدل: { x: 480, y: 690 } | القرار: { x: 280, y: 740 }
+    </div>
+    <div class="footer">
+        <i class="fas fa-gem"></i> النجاح هو حصيلة الاجتهاد • مبروك هذا الإنجاز
+    </div>
+</div>
+
+<script>
+    // ----- تحميل مكتبة canvas-confetti بطريقة آمنة (حتى لو فشلت لن يظهر خطأ) -----
+    function loadConfettiLibrary() {
+        return new Promise((resolve) => {
+            if (typeof window.canvasConfetti !== 'undefined') {
+                resolve(window.canvasConfetti);
+                return;
+            }
+            const script = document.createElement('script');
+            script.src = "https://cdn.jsdelivr.net/npm/canvas-confetti@1";
+            script.onload = () => {
+                if (typeof window.canvasConfetti !== 'undefined') {
+                    resolve(window.canvasConfetti);
+                } else {
+                    // دالة بديلة بسيطة
+                    resolve(() => console.log("confetti would fire here"));
+                }
+            };
+            script.onerror = () => {
+                console.warn("فشل تحميل canvas-confetti، سيتم استخدام دالة وهمية");
+                resolve(() => {});
+            };
+            document.head.appendChild(script);
+        });
+    }
+
+    let safeConfetti = () => {};
+    loadConfettiLibrary().then(confettiFn => { safeConfetti = confettiFn; });
+
+    // ========== إعدادات الصورة والخطوط ==========
+    const TEMPLATE_IMAGE_URL = "res.png";  // ⚠️ ضع اسم صورتك هنا
+    
+    // ✏️✏️✏️ عدل الإحداثيات هنا ✏️✏️✏️
+    const COORDS = {
+        fullName:   { x: 280, y: 210 },
+        regNumber:  { x: 280, y: 270 },
+        serie:      { x: 280, y: 330 },
+        school:     { x: 280, y: 390 },
+        wilaya:     { x: 280, y: 450 },
+        centre:     { x: 280, y: 510 },
+        session:    { x: 280, y: 570 },
+        dateResult: { x: 280, y: 630 },
+        average:    { x: 480, y: 690 },
+        decision:   { x: 280, y: 740 }
+    };
+    
+    const TEXT_STYLE = {
+        font: "bold 20px 'Cairo', 'Tahoma', sans-serif",
+        color: "#FFFFFF",
+        align: "right"
+    };
+    
+    // بيانات افتراضية لضبط الإحداثيات
+    const MOCK_DATA = {
+        name: "أحمد بن علي الزهراني",
+        serie: "شعبة العلوم التجريبية",
+        school: "ثانوية الأندلس النموذجية",
+        wilaya: "ولاية الجزائر",
+        centre: "مركز الامتحان: ثانوية الحرية",
+        decision: "ناجح بمعدل ممتاز",
+        moyenne: "16.42",
+        dateResult: "2025/06/25"
+    };
+    
+    let examType = 'bac';
+    let currentImage = null;
+    const canvas = document.getElementById('resultCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // تبديل الدورة
+    document.querySelectorAll('.type-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            examType = btn.getAttribute('data-type');
+            document.getElementById('resultWrapper').classList.remove('show');
+        });
+    });
+    
+    function drawText(ctx, text, x, y) {
+        if (!text || text === "") text = "—";
+        ctx.fillText(text, x, y);
+    }
+    
+    function loadImage(url) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = "Anonymous";
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error(`فشل تحميل الصورة من ${url}. تأكد من وجودها.`));
+            img.src = url;
+        });
+    }
+    
+    async function drawResultOnImage(mockData, userInputNumber) {
+        if (!currentImage) {
+            currentImage = await loadImage(TEMPLATE_IMAGE_URL);
+        }
+        canvas.width = currentImage.width;
+        canvas.height = currentImage.height;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(currentImage, 0, 0, canvas.width, canvas.height);
+        
+        ctx.font = TEXT_STYLE.font;
+        ctx.fillStyle = TEXT_STYLE.color;
+        ctx.textAlign = TEXT_STYLE.align;
+        ctx.shadowBlur = 0;
+        
+        const fullName = mockData.name;
+        const regNumber = userInputNumber;
+        const serie = mockData.serie;
+        const school = mockData.school;
+        const wilaya = mockData.wilaya;
+        const centre = mockData.centre;
+        const session = (examType === 'bac') ? "الدورة العادية" : "الدورة التكميلية";
+        const dateResult = mockData.dateResult;
+        const avgText = mockData.moyenne;
+        let decision = mockData.decision;
+        
+        drawText(ctx, fullName, COORDS.fullName.x, COORDS.fullName.y);
+        drawText(ctx, regNumber, COORDS.regNumber.x, COORDS.regNumber.y);
+        drawText(ctx, serie, COORDS.serie.x, COORDS.serie.y);
+        drawText(ctx, school, COORDS.school.x, COORDS.school.y);
+        drawText(ctx, wilaya, COORDS.wilaya.x, COORDS.wilaya.y);
+        drawText(ctx, centre, COORDS.centre.x, COORDS.centre.y);
+        drawText(ctx, session, COORDS.session.x, COORDS.session.y);
+        drawText(ctx, dateResult, COORDS.dateResult.x, COORDS.dateResult.y);
+        drawText(ctx, avgText, COORDS.average.x, COORDS.average.y);
+        
+        let decisionColor = "#F5D742";
+        if (decision.includes("ناجح")) decisionColor = "#2ecc71";
+        else if (decision.includes("غير ناجح")) decisionColor = "#e74c3c";
+        ctx.fillStyle = decisionColor;
+        drawText(ctx, decision, COORDS.decision.x, COORDS.decision.y);
+        ctx.fillStyle = TEXT_STYLE.color;
+        
+        if (decision.includes("ناجح")) {
+            try { safeConfetti({ particleCount: 100, spread: 60, origin: { y: 0.6 } }); } catch(e) {}
+        }
+    }
+    
+    async function searchWithMock() {
+        const numero = document.getElementById('numero').value.trim();
+        if (!numero) {
+            alert("الرجاء إدخال رقم المترشح (أي رقم للاختبار)");
+            return;
+        }
+        const loader = document.getElementById('loader');
+        const wrapper = document.getElementById('resultWrapper');
+        loader.classList.add('active');
+        wrapper.classList.remove('show');
+        try {
+            await new Promise(resolve => setTimeout(resolve, 300));
+            await drawResultOnImage(MOCK_DATA, numero);
+            wrapper.classList.add('show');
+            loader.classList.remove('active');
+        } catch (err) {
+            loader.classList.remove('active');
+            alert("خطأ: تأكد من وجود ملف الصورة '" + TEMPLATE_IMAGE_URL + "' في نفس المجلد.");
+        }
+    }
+    
+    async function preloadTemplate() {
+        try {
+            currentImage = await loadImage(TEMPLATE_IMAGE_URL);
+            console.log("تم تحميل القالب بنجاح");
+        } catch (err) {
+            console.warn(err.message);
+            alert(`⚠️ لم يتم العثور على الصورة "${TEMPLATE_IMAGE_URL}" في نفس المجلد.\nالرجاء وضع الصورة وتحديث الصفحة.`);
+        }
+    }
+    
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.download = 'golden_bac_custom.png';
+        link.href = canvas.toDataURL();
+        link.click();
+    });
+    
+    document.getElementById('searchBtn').addEventListener('click', searchWithMock);
+    document.getElementById('numero').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') searchWithMock();
+    });
+    
+    preloadTemplate();
+</script>
+</body>
+</html>

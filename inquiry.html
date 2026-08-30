@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golden Bac - استفسارات واتصال</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <!-- الأنماط الخاصة بصفحة الاستفسارات تم نقلها إلى ملف styles.css -->
+</head>
+<body>
+    <!-- Spinner/Loader Overlay (موجود في الصفحات الأخرى) -->
+    <div class="spinner-overlay" id="spinnerOverlay">
+        <div>
+            <div class="spinner">
+                <div class="spinner-dot"></div><div class="spinner-dot"></div><div class="spinner-dot"></div>
+                <div class="spinner-dot"></div><div class="spinner-dot"></div><div class="spinner-dot"></div>
+                <div class="spinner-dot"></div><div class="spinner-dot"></div>
+            </div>
+            <div class="spinner-text" id="spinnerText">جاري الإرسال...</div>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- Header -->
+    <header id="mainHeader">
+        <div class="container header-content">
+            <div class="logo-container">
+                <div class="logo"><img src="golden.png" alt="شعار Golden Bac"></div>
+                <div class="logo-text"><h1>Golden Bac</h1><p>مركز كولدن باك</p></div>
+            </div>
+            <div class="hamburger-menu" id="hamburgerMenu">
+                <div class="hamburger-icon"><span></span><span></span><span></span></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar Menu (مع إضافة رابط استفسارات) -->
+    <div class="sidebar-menu" id="sidebarMenu">
+        <div style="display:flex; gap:35px;">
+            <div class="logo"><img src="golden.png" alt="شعار"></div>
+            <div class="logo-text"><h1>Golden Bac</h1><p>كولدن باك</p></div>
+            <button class="theme-toggle-sidebar" id="themeToggleSidebar"><i class="fas fa-moon"></i></button>
+        </div><br>
+        <div class="sidebar-header"><h2 class="sidebar-title">القائمة الرئيسية</h2></div>
+        <ul class="menu-items">
+            <li class="menu-item"><a href="index.html"><i class="fas fa-home"></i><span>الرئيسية</span></a></li>
+            <li class="menu-item"><a href="subjects.html"><i class="fas fa-book-open"></i><span>المواد الدراسية</span></a></li>
+            <li class="menu-item"><a href="exams.html"><i class="fas fa-file-alt"></i><span>الامتحانات</span></a></li>
+            <li class="menu-item"><a href="tips.html"><i class="fas fa-lightbulb"></i><span>نصائح للنجاح</span></a></li>
+            <li class="menu-item"><a href="location.html"><i class="fas fa-map-marker-alt"></i><span>موقع المركز</span></a></li>
+            <li class="menu-item"><a href="inquiry.html" class="active"><i class="fas fa-envelope"></i><span>استفسارات</span></a></li>
+        </ul>
+    </div>
+    <div class="menu-overlay" id="menuOverlay"></div>
+
+    <!-- قسم الاستفسارات (تم تعديله ليتبع نفس نمط الأقسام الأخرى) -->
+    <section class="inquiry-section">
+        <div class="container">
+            <div class="section-title"><br>
+            <br>
+            <br>
+                <h2>تواصل معنا</h2>
+                <p class="section-subtitle">لديك استفسار أو اقتراح؟ املأ النموذج وسنرد عليك في أقرب وقت</p>
+            </div>
+
+            <div class="inquiry-card">
+                <div class="inquiry-body">
+                    <form id="inquiryForm" class="inquiry-form">
+                        <div class="form-group">
+                            <i class="fas fa-user"></i>
+                            <input type="text" id="name" name="name" placeholder="الاسم الكامل *" required>
+                        </div>
+                        <div class="form-group">
+                            <i class="fas fa-phone"></i>
+                            <input type="tel" id="phone" name="phone" placeholder="رقم الهاتف *" required>
+                        </div>
+                        <div class="form-group">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="email" name="email" placeholder="البريد الإلكتروني (اختياري)">
+                        </div>
+                        <div class="form-group">
+                            <i class="fas fa-pencil-alt"></i>
+                            <textarea id="message" name="message" placeholder="اكتب استفسارك هنا *" required></textarea>
+                        </div>
+                        <button type="submit" class="inquiry-btn" id="submitBtn">
+                            <i class="fas fa-paper-plane"></i> إرسال الاستفسار
+                        </button>
+                        <div class="success-message" id="successMessage">
+                            <i class="fas fa-check-circle"></i> تم إرسال استفسارك بنجاح! سنتواصل معك قريباً.
+                        </div>
+                        <div class="error-message" id="errorMessage">
+                            <i class="fas fa-exclamation-circle"></i> حدث خطأ أثناء الإرسال، يرجى المحاولة لاحقاً.
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="backToTop"><i class="fas fa-arrow-up"></i></button>
+
+    <!-- Footer (نفس الفوتر الموجود في الصفحات الأخرى مع إضافة رابط استفسارات) -->
+     <footer>
+    <div class="container">
+        <!-- صف الشعار ووسائل التواصل -->
+        <div class="footer-top">
+            <div class="footer-logo">
+                <img src="golden.png" alt="Golden Bac">
+                <h3>Golden Bac</h3>
+                <p>مركز كولدن باك التعليمي</p>
+            </div>
+            <div class="footer-social">
+                <a href="#" target="_blank" aria-label="فيسبوك"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" target="_blank" aria-label="واتساب"><i class="fab fa-whatsapp"></i></a>
+                <a href="#" target="_blank" aria-label="تلغرام"><i class="fab fa-telegram-plane"></i></a>
+                <a href="mailto:centergolden04@gmail.com" aria-label="البريد الإلكتروني"><i class="fas fa-envelope"></i></a>
+            </div>
+        </div>
+        
+        <!-- الروابط السريعة ومعلومات الاتصال -->
+        <div class="footer-grid">
+            <div class="footer-section">
+                <h4>روابط سريعة</h4>
+                <ul>
+                    <li><a href="index.html"><i class="fas fa-angle-left"></i> الرئيسية</a></li>
+                    <li><a href="subjects.html"><i class="fas fa-angle-left"></i> المواد الدراسية</a></li>
+                    <li><a href="exams.html"><i class="fas fa-angle-left"></i> الامتحانات</a></li>
+                    <li><a href="tips.html"><i class="fas fa-angle-left"></i> نصائح</a></li>
+                    <li><a href="location.html"><i class="fas fa-angle-left"></i> موقع المركز</a></li>
+                    <li><a href="inquiry.html"><i class="fas fa-angle-left"></i> استفسارات</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>عن المركز</h4>
+                <p>مركز Golden Bac يهدف إلى تقديم أفضل الدعم التعليمي لطلاب البكالوريا في موريتانيا من خلال توفير المصادر التعليمية اللازمة للنجاح.</p>
+            </div>
+            <div class="footer-section">
+                <h4>اتصل بنا</h4>
+                <ul class="contact-info">
+                    <li><i class="fas fa-map-marker-alt"></i> نواكشوط، عرفات - قرب مجمع بلادي</li>
+                    <li><i class="fas fa-phone"></i> <a href="tel:+22234987117">22234987117</a></li>
+                    <li><i class="fas fa-phone"></i> <a href="tel:+22248359510">22248359510</a></li>
+                    <li><i class="fas fa-envelope"></i> <a href="mailto:centergolden04@gmail.com">centergolden04@gmail.com</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- حقوق الملكية -->
+        <div class="footer-bottom">
+            <p>تم التطوير بواسطة: <strong>حمزة سيدي</strong> &copy; 2026 | جميع الحقوق محفوظة لمركز Golden Bac</p>
+        </div>
+    </div>
+</footer>
+
+
+    <!-- EmailJS -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script>
+        (function() {
+            emailjs.init("nC-oFCUhcIYmnKfDF"); // Public Key
+        })();
+
+        document.getElementById('inquiryForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('name').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const message = document.getElementById('message').value.trim();
+
+            if (!name || !phone || !message) {
+                alert('يرجى ملء جميع الحقول المطلوبة');
+                return;
+            }
+
+            document.getElementById('spinnerOverlay').style.display = 'flex';
+            document.getElementById('submitBtn').disabled = true;
+
+            emailjs.send('service_wuykghl', 'template_t1jhovi', {
+                from_name: name,
+                from_phone: phone,
+                from_email: email || 'لا يوجد',
+                message: message,
+                date: new Date().toLocaleString('ar-EG')
+            }).then(function(response) {
+                console.log('نجاح', response);
+                document.getElementById('spinnerOverlay').style.display = 'none';
+                document.getElementById('submitBtn').disabled = false;
+                document.getElementById('successMessage').style.display = 'block';
+                document.getElementById('inquiryForm').reset();
+                setTimeout(() => {
+                    document.getElementById('successMessage').style.display = 'none';
+                }, 5000);
+            }, function(error) {
+                console.log('خطأ', error);
+                document.getElementById('spinnerOverlay').style.display = 'none';
+                document.getElementById('submitBtn').disabled = false;
+                document.getElementById('errorMessage').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('errorMessage').style.display = 'none';
+                }, 5000);
+            });
+        });
+    </script>
+
+    <!-- السكريبت العام للموقع (يحتوي على وظائف القائمة الجانبية والتمرير) -->
+    <script src="script.js"></script>
+</body>
+</html>

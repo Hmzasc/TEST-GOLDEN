@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golden Bac - المسابقة الرمضانية</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>window.jspdf = window.jspdf;</script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
+    <style>
+        .ramadan-years, .ramadan-nights {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .year-btn, .night-btn {
+            background: transparent;
+            border: none;
+            padding: 8px 20px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--secondary-color);
+            cursor: pointer;
+            border-radius: 40px;
+            transition: all 0.3s ease;
+        }
+        .dark-mode .year-btn, .dark-mode .night-btn { color: var(--dark-color); }
+        .year-btn.active, .night-btn.active {
+            background: linear-gradient(45deg, var(--primary-color), #ffde7d);
+            color: var(--secondary-color);
+            box-shadow: 0 5px 15px rgba(248,183,57,0.3);
+        }
+        .questions-slider {
+            text-align: center;
+            margin: 30px 0;
+            background: rgba(248,183,57,0.05);
+            border-radius: 30px;
+            padding: 30px;
+        }
+        .question-image {
+            max-width: 100%;
+            max-height: 500px;
+            border-radius: 20px;
+            background: white;
+            padding: 4px;
+            border: double 3px transparent;
+            border-radius: 24px;
+            background-image: linear-gradient(white, white), 
+                              linear-gradient(120deg, var(--primary-color) 0%, #ffde7d 50%, var(--accent-color) 100%);
+            background-origin: border-box;
+            background-clip: content-box, border-box;
+            animation: borderShift 4s ease infinite;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+        @keyframes borderShift {
+            0% { border-image-source: linear-gradient(120deg, var(--primary-color), #ffde7d, var(--accent-color)); }
+            50% { border-image-source: linear-gradient(300deg, var(--primary-color), #ffde7d, var(--accent-color)); }
+            100% { border-image-source: linear-gradient(120deg, var(--primary-color), #ffde7d, var(--accent-color)); }
+        }
+        .slider-nav {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 25px 0 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .slider-btn, .download-single-btn {
+            background: linear-gradient(45deg, var(--primary-color), #ffde7d);
+            border: none;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: var(--secondary-color);
+        }
+        .slider-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .slider-btn:hover:not(:disabled), .download-single-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(248,183,57,0.3);
+        }
+        .download-all-btn {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 40px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 15px auto;
+            transition: 0.3s;
+        }
+        .download-all-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46,204,113,0.3);
+        }
+        @media (max-width: 768px) {
+            .ramadan-years, .ramadan-nights {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                justify-content: flex-start;
+            }
+            .question-image { max-height: 300px; }
+            .slider-nav { gap: 12px; }
+            .slider-btn, .download-single-btn { padding: 6px 14px; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Spinner/Loader Overlay -->
+    <div class="spinner-overlay" id="spinnerOverlay">
+        <div>
+            <div class="spinner">
+                <div class="spinner-dot"></div><div class="spinner-dot"></div><div class="spinner-dot"></div>
+                <div class="spinner-dot"></div><div class="spinner-dot"></div><div class="spinner-dot"></div>
+                <div class="spinner-dot"></div><div class="spinner-dot"></div>
+            </div>
+            <div class="spinner-text" id="spinnerText">جاري التحميل...</div>
+        </div>
+    </div>
+
+    <div class="progress-bar" id="progressBar"></div>
+
+    <header id="mainHeader">
+        <div class="container header-content">
+            <div class="logo-container">
+                <div class="logo"><img src="golden.png" alt="شعار Golden Bac"></div>
+                <div class="logo-text"><h1>Golden Bac</h1><p>مركز كولدن باك</p></div>
+            </div>
+            <div class="hamburger-menu" id="hamburgerMenu">
+                <div class="hamburger-icon"><span></span><span></span><span></span></div>
+            </div>
+        </div>
+    </header>
+
+    <div class="sidebar-menu" id="sidebarMenu">
+        <div style="display:flex; gap:35px;">
+            <div class="logo"><img src="golden.png" alt="شعار"></div>
+            <div class="logo-text"><h1>Golden Bac</h1><p>كولدن باك</p></div>
+            <button class="theme-toggle-sidebar" id="themeToggleSidebar"><i class="fas fa-moon"></i></button>
+        </div><br>
+        <div class="sidebar-header"><h2 class="sidebar-title">القائمة الرئيسية</h2></div>
+        <ul class="menu-items">
+            <li class="menu-item"><a href="index.html"><i class="fas fa-home"></i><span>الرئيسية</span></a></li>
+            <li class="menu-item"><a href="subjects.html"><i class="fas fa-book-open"></i><span>المواد الدراسية</span></a></li>
+            <li class="menu-item"><a href="exams.html"><i class="fas fa-file-alt"></i><span>الامتحانات</span></a></li>
+            <li class="menu-item"><a href="tips.html"><i class="fas fa-lightbulb"></i><span>نصائح للنجاح</span></a></li>
+            <li class="menu-item"><a href="location.html"><i class="fas fa-map-marker-alt"></i><span>موقع المركز</span></a></li>
+            <li class="menu-item"><a href="inquiry.html"><i class="fas fa-envelope"></i><span>استفسارات</span></a></li>
+            <li class="menu-item"><a href="ramadan.html" class="active"><i class="fas fa-moon"></i><span>المسابقة الرمضانية</span></a></li>
+            <li class="menu-item"><a href="sujets.html"><i class="fas fa-folder-open"></i><span>مواضيع المركز</span></a></li>
+        </ul>
+    </div>
+    <div class="menu-overlay" id="menuOverlay"></div><br><br><br>
+
+    <section class="exams-section">
+        <div class="container">
+            <div class="section-title">
+                <h2>📖 المسابقة الرمضانية</h2>
+                <p class="section-subtitle">اختر الليلة لترى أسئلة المسابقة</p>
+            </div>
+            <div class="ramadan-years" id="yearsContainer"></div>
+            <div class="ramadan-nights" id="nightsContainer"></div>
+            <div id="questionsContainer"></div>
+        </div>
+    </section>
+
+    <!-- التعليقات -->
+    <section class="comments-section" style="padding: 60px 0;">
+        <div class="container">
+            <div class="comments-container">
+                <div class="comments-wrapper">
+                    <div class="comments-header"><i class="fas fa-comments"></i><h2>💬 التعليقات</h2><span id="comments-count" class="comments-badge">0</span></div>
+                    <div class="add-comment-form">
+                        <div class="form-group"><i class="fas fa-user"></i><input type="text" id="userName" placeholder="اسمك (اختياري)" maxlength="50"></div>
+                        <div class="form-group"><i class="fas fa-comment-dots"></i><textarea id="commentText" placeholder="اكتب تعليقك هنا..." rows="4" maxlength="500" required></textarea></div>
+                        <button class="submit-comment-btn"><i class="fas fa-paper-plane"></i> <span>إرسال التعليق</span></button>
+                    </div>
+                    <div id="commentsList" class="comments-list"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="comments-script.js"></script>
+
+    <button class="back-to-top" id="backToTop"><i class="fas fa-arrow-up"></i></button>
+
+    <footer>
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-logo"><img src="golden.png" alt="Golden Bac"><h3>Golden Bac</h3><p>مركز كولدن باك التعليمي</p></div>
+                <div class="footer-social">
+                    <a href="#" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                    <a href="#" target="_blank"><i class="fab fa-telegram-plane"></i></a>
+                    <a href="mailto:centergolden04@gmail.com"><i class="fas fa-envelope"></i></a>
+                </div>
+            </div>
+            <div class="footer-grid">
+                <div class="footer-section"><h4>روابط سريعة</h4><ul><li><a href="index.html"><i class="fas fa-angle-left"></i> الرئيسية</a></li><li><a href="subjects.html"><i class="fas fa-angle-left"></i> المواد الدراسية</a></li><li><a href="exams.html"><i class="fas fa-angle-left"></i> الامتحانات</a></li><li><a href="tips.html"><i class="fas fa-angle-left"></i> نصائح</a></li><li><a href="location.html"><i class="fas fa-angle-left"></i> موقع المركز</a></li><li><a href="inquiry.html"><i class="fas fa-angle-left"></i> استفسارات</a></li><li><a href="ramadan.html"><i class="fas fa-angle-left"></i> المسابقة الرمضانية</a></li><li><a href="sujets.html"><i class="fas fa-angle-left"></i> مواضيع المركز</a></li></ul></div>
+                <div class="footer-section"><h4>عن المركز</h4><p>مركز Golden Bac يهدف إلى تقديم أفضل الدعم التعليمي لطلاب البكالوريا في موريتانيا.</p></div>
+                <div class="footer-section"><h4>اتصل بنا</h4><ul class="contact-info"><li><i class="fas fa-map-marker-alt"></i> نواكشوط، عرفات - قرب مجمع بلادي</li><li><i class="fas fa-phone"></i> <a href="tel:+22234987117">+222 34 98 71 17</a></li><li><i class="fas fa-phone"></i> <a href="tel:+22248359510">+222 48 35 95 10</a></li><li><i class="fas fa-envelope"></i> <a href="mailto:centergolden04@gmail.com">centergolden04@gmail.com</a></li></ul></div>
+            </div>
+            <div class="footer-bottom"><p>تم التطوير بواسطة: <strong>حمزة سيدي</strong> &copy; 2026 | جميع الحقوق محفوظة لمركز Golden Bac</p></div>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // بيانات تجريبية (تستبدل بالواقع)
+        const ramadanData = {
+            "رمضان 2026": {
+                nights: {
+                    1: {
+                        questions: [
+                            "images/ramadan2026/night1_q1.jpg",
+                            "images/ramadan2026/night1_q2.jpg",
+                            "images/ramadan2026/night1_q3.jpg",
+                "images/ramadan2026/night1_q4.jpg",
+                            "images/ramadan2026/night1_q5.jpg",
+                            "images/ramadan2026/night1_q6.jpg"
+                
+                       
+                       
+                       
+                       
+                       
+                        ],
+                        pdf: "files/ramadan/night1.pdf"
+                    },
+                    2: {
+                        questions: [
+                            "images/ramadan2026/night2_q1.jpg",
+                            "images/ramadan2026/night2_q2.jpg",
+                 "images/ramadan2026/night2_q3.jpg",
+                            "images/ramadan2026/night2_q4.jpg",
+                  "images/ramadan2026/night2_q5.jpg",
+                            "images/ramadan2026/night2_q6.jpg"
+                                 
+                         
+                       ],
+                        pdf: "files/ramadan/night2.pdf"
+                    },
+                    
+               3:{
+           questions: [
+        "images/ramadan2026/night3_q1.jpg",
+        "images/ramadan2026/night3_q2.jpg",
+        "images/ramadan2026/night3_q3.jpg",
+        "images/ramadan2026/night3_q4.jpg",
+        "images/ramadan2026/night3_q5.jpg",
+        "images/ramadan2026/night3_q6.jpg"
+        
+        
+    ],
+    pdf: "files/ramadan/night3.pdf" }
+                }
+            }
+        };
+
+        let currentYear = "رمضان 2026";
+        let currentNight = null;
+        let currentIndex = 0;
+
+        function buildYears() {
+            const yearsDiv = document.getElementById('yearsContainer');
+            yearsDiv.innerHTML = '';
+            const years = Object.keys(ramadanData);
+            years.forEach(year => {
+                const btn = document.createElement('button');
+                btn.className = 'year-btn';
+                btn.textContent = year;
+                btn.dataset.year = year;
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.year-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentYear = year;
+                    buildNights();
+                });
+                yearsDiv.appendChild(btn);
+            });
+            if (years.length) document.querySelector('.year-btn').classList.add('active');
+        }
+
+        function buildNights() {
+            const nightsDiv = document.getElementById('nightsContainer');
+            const nights = ramadanData[currentYear]?.nights || {};
+            nightsDiv.innerHTML = '';
+            Object.keys(nights).sort((a,b)=>a-b).forEach(night => {
+                const btn = document.createElement('button');
+                btn.className = 'night-btn';
+                btn.textContent = `الليلة ${night}`;
+                btn.dataset.night = night;
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.night-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentNight = parseInt(night);
+                    currentIndex = 0;
+                    showNightQuestions();
+                });
+                nightsDiv.appendChild(btn);
+            });
+            if (Object.keys(nights).length) {
+                document.querySelector('.night-btn').classList.add('active');
+                currentNight = parseInt(Object.keys(nights)[0]);
+                if (currentNight) showNightQuestions();
+            } else {
+                document.getElementById('questionsContainer').innerHTML = '<p class="text-center">لا توجد ليالي بعد</p>';
+            }
+        }
+
+        function showNightQuestions() {
+            const container = document.getElementById('questionsContainer');
+            if (!currentNight) return;
+            const nightData = ramadanData[currentYear]?.nights[currentNight];
+            if (!nightData) return;
+            const questions = nightData.questions;
+            container.innerHTML = `
+                <div class="questions-slider">
+                    <img class="question-image" id="mainImage" src="${questions[currentIndex]}" alt="سؤال ${currentIndex+1}" onerror="this.src='placeholder.jpg'">
+                    <div class="slider-nav">
+                        <button class="slider-btn" id="prevBtn" ${currentIndex===0 ? 'disabled' : ''}>← السابق</button>
+                        <span style="font-weight:600;">${currentIndex+1} / ${questions.length}</span>
+                        <button class="slider-btn" id="nextBtn" ${currentIndex===questions.length-1 ? 'disabled' : ''}>التالي →</button>
+                        <a class="download-single-btn" id="downloadSingleBtn" href="${questions[currentIndex]}" download="سؤال_${currentNight}_${currentIndex+1}.jpg"><i class="fas fa-download"></i> تحميل هذه الصورة</a>
+                    </div>
+                    <a href="${nightData.pdf}" class="download-all-btn" download><i class="fas fa-file-pdf"></i> تحميل جميع الأسئلة (PDF)</a>
+                </div>
+            `;
+            document.getElementById('prevBtn')?.addEventListener('click', () => {
+                if (currentIndex > 0) { currentIndex--; showNightQuestions(); }
+            });
+            document.getElementById('nextBtn')?.addEventListener('click', () => {
+                if (currentIndex < questions.length-1) { currentIndex++; showNightQuestions(); }
+            });
+        }
+
+        // باقي توابع script.js (التمرير، الوضع المظلم، العد التنازلي)
+        document.addEventListener('DOMContentLoaded', () => {
+            buildYears();
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') document.body.classList.add('dark-mode');
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) themeToggle.addEventListener('click', toggleTheme);
+            document.getElementById('backToTop')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+            window.addEventListener('scroll', handleScroll);
+            handleScroll();
+            if (typeof initCountdown === 'function') initCountdown();
+            if (typeof createParticles === 'function') createParticles();
+        });
+
+        function handleScroll() {
+            const progressBar = document.getElementById('progressBar');
+            if (progressBar) {
+                const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+                const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                progressBar.style.width = (winScroll / height) * 100 + "%";
+            }
+            const backToTop = document.getElementById('backToTop');
+            if (backToTop) {
+                if (window.scrollY > 300) backToTop.classList.add('show');
+                else backToTop.classList.remove('show');
+            }
+            const header = document.getElementById('mainHeader');
+            if (header) {
+                if (window.scrollY > 50) header.classList.add('scrolled');
+                else header.classList.remove('scrolled');
+            }
+        }
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const icon = this.querySelector('i');
+            if (document.body.classList.contains('dark-mode')) {
+                icon.classList.remove('fa-moon'); icon.classList.add('fa-sun');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                icon.classList.remove('fa-sun'); icon.classList.add('fa-moon');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+    </script>
+</body>
+</html>

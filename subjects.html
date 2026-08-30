@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -10,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
 
     <!-- ===== الأنماط الموحدة ===== -->
-    <link rel="stylesheet" href="styles.css?v=20260830" />
+    <link rel="stylesheet" href="styles.css?v=20260901" />
 
     <!-- ===== FIREBASE ===== -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -268,22 +269,32 @@
         };
 
         window.bindAdminPanelEvents = function () {
-            document.getElementById('awAddSubjectBtn').addEventListener('click', async () => {
-                const name = document.getElementById('awSubjectName').value.trim();
-                const icon = document.getElementById('awSubjectIcon').value.trim() || 'fa-book';
-                const desc = document.getElementById('awSubjectDesc').value.trim();
-                if (!name) { showToast('يرجى إدخال اسم المادة', 'warning'); return; }
-                showSpinner('جاري الإضافة...');
+            const btn = document.getElementById('awAddSubjectBtn');
+            if (!btn) { console.error('awAddSubjectBtn غير موجود في الصفحة'); return; }
+
+            btn.addEventListener('click', async () => {
                 try {
+                    const nameEl = document.getElementById('awSubjectName');
+                    const iconEl = document.getElementById('awSubjectIcon');
+                    const descEl = document.getElementById('awSubjectDesc');
+
+                    const name = (nameEl && nameEl.value ? nameEl.value : '').trim();
+                    const icon = (iconEl && iconEl.value ? iconEl.value : '').trim() || 'fa-book';
+                    const desc = (descEl && descEl.value ? descEl.value : '').trim();
+
+                    if (!name) { showToast('يرجى إدخال اسم المادة', 'warning'); return; }
+
+                    showSpinner('جاري الإضافة...');
                     await db.collection('subjects').add({ name, icon, description: desc, order: Date.now() });
+                    hideSpinner();
                     showToast('تمت إضافة المادة بنجاح', 'success');
                     if (typeof closeAdminWidget === 'function') closeAdminWidget();
                     await loadSubjects();
                 } catch (e) {
-                    console.error(e);
-                    showToast('حدث خطأ', 'error');
+                    console.error('خطأ أثناء إضافة المادة:', e);
+                    hideSpinner();
+                    showToast('حدث خطأ أثناء الإضافة: ' + (e && e.message ? e.message : 'غير معروف'), 'error');
                 }
-                hideSpinner();
             });
         };
 
@@ -393,11 +404,11 @@
                 loading.style.display = 'none';
 
                 let html = admin ? `
-                    <div class="add-book-form" style="background:rgba(0,0,0,0.03); padding:16px; border-radius:var(--radius-sm); margin-bottom:18px;">
+                    <div class="add-book-form admin-panel" style="background:rgba(0,0,0,0.03); padding:16px; border-radius:var(--radius-sm); margin-bottom:18px; display:block;">
                         <h4 style="margin-bottom:10px; font-size:0.95rem;"><i class="fas fa-plus-circle"></i> إضافة كتاب لهذه المادة</h4>
-                        <div class="form-group"><input type="text" id="awBookName" placeholder="اسم الكتاب" /></div>
-                        <div class="form-group"><input type="text" id="awBookYear" placeholder="السنة (مثال: 2025)" /></div>
-                        <div class="form-group"><input type="file" id="awBookFile" accept=".pdf" /></div>
+                        <div class="form-group"><label>اسم الكتاب</label><input type="text" id="awBookName" placeholder="مثال: ملخص الرياضيات" /></div>
+                        <div class="form-group"><label>السنة</label><input type="text" id="awBookYear" placeholder="مثال: 2025" /></div>
+                        <div class="form-group"><label>ملف PDF (اختر من جهازك)</label><input type="file" id="awBookFile" accept=".pdf" /></div>
                         <button class="btn-submit" id="awAddBookBtn"><i class="fas fa-plus"></i> إضافة كتاب</button>
                     </div>
                 ` : '';
@@ -459,26 +470,31 @@
         }
 
         async function addBook(subjectName) {
-            const name = document.getElementById('awBookName').value.trim();
-            const year = document.getElementById('awBookYear').value.trim();
-            const fileInput = document.getElementById('awBookFile');
-            if (!name || !year) { showToast('يرجى ملء اسم الكتاب والسنة', 'warning'); return; }
-            if (!fileInput.files.length) { showToast('يرجى اختيار ملف PDF', 'warning'); return; }
-            const file = fileInput.files[0];
-            if (file.type !== 'application/pdf') { showToast('يرجى اختيار ملف PDF', 'warning'); return; }
-
-            showSpinner('جاري رفع الملف...');
             try {
+                const nameEl = document.getElementById('awBookName');
+                const yearEl = document.getElementById('awBookYear');
+                const fileInput = document.getElementById('awBookFile');
+
+                const name = (nameEl && nameEl.value ? nameEl.value : '').trim();
+                const year = (yearEl && yearEl.value ? yearEl.value : '').trim();
+
+                if (!name || !year) { showToast('يرجى ملء اسم الكتاب والسنة', 'warning'); return; }
+                if (!fileInput || !fileInput.files.length) { showToast('يرجى اختيار ملف PDF', 'warning'); return; }
+                const file = fileInput.files[0];
+                if (file.type !== 'application/pdf') { showToast('يرجى اختيار ملف PDF', 'warning'); return; }
+
+                showSpinner('جاري رفع الملف...');
                 const path = `books/${subjectName}_${name}_${Date.now()}.pdf`;
                 const url = await uploadFile(file, path);
                 await db.collection('books').add({ subject: subjectName, name, year, link: url, fileName: file.name });
+                hideSpinner();
                 showToast('تمت إضافة الكتاب بنجاح', 'success');
                 await renderBooksList(subjectName);
             } catch (e) {
-                console.error(e);
-                showToast('حدث خطأ في الرفع', 'error');
+                console.error('خطأ أثناء إضافة الكتاب:', e);
+                hideSpinner();
+                showToast('حدث خطأ أثناء الإضافة: ' + (e && e.message ? e.message : 'غير معروف'), 'error');
             }
-            hideSpinner();
         }
 
         async function deleteBook(id, subjectName) {
@@ -576,10 +592,9 @@
     </script>
 
     <!-- ===== الملفات المشتركة (نفس النظام يُستخدم في كل صفحات الموقع) ===== -->
-    <script src="pdf-viewer.js?v=20260830"></script>
-    <script src="download.js?v=20260830"></script>
-    <script src="comments.js?v=20260830"></script>
-    <script src="icon-picker.js?v=20260830"></script>
-    <script src="admin-widget.js?v=20260830"></script>
+    <script src="pdf-viewer.js?v=20260901"></script>
+    <script src="download.js?v=20260901"></script>
+    <script src="comments.js?v=20260901"></script>
+    <script src="admin-widget.js?v=20260902"></script>
 </body>
 </html>

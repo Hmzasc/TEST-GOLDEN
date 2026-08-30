@@ -24,6 +24,101 @@
     if (typeof showToast === 'function') showToast(msg, type);
   }
   
+  // ============================================================
+  // منتقي الأيقونات — مدمج هنا مباشرة (وليس في ملف icon-picker.js
+  // منفصل) حتى لا تعتمد هذه الميزة الحرجة على نجاح تحميل ملف خارجي
+  // إضافي. يعمل بمجرد نجاح تحميل admin-widget.js نفسه.
+  // ============================================================
+  const ICON_CHOICES = [
+    'fa-book', 'fa-book-open', 'fa-graduation-cap', 'fa-user-graduate',
+    'fa-chalkboard-teacher', 'fa-chalkboard', 'fa-pencil-alt', 'fa-pen',
+    'fa-calculator', 'fa-square-root-alt', 'fa-infinity', 'fa-superscript',
+    'fa-flask', 'fa-atom', 'fa-dna', 'fa-microscope',
+    'fa-globe', 'fa-globe-africa', 'fa-map', 'fa-map-marked-alt',
+    'fa-language', 'fa-comment', 'fa-comments', 'fa-spell-check',
+    'fa-landmark', 'fa-university', 'fa-mosque', 'fa-book-quran',
+    'fa-chart-line', 'fa-chart-bar', 'fa-clipboard-list', 'fa-tasks',
+    'fa-lightbulb', 'fa-brain', 'fa-puzzle-piece', 'fa-question-circle',
+    'fa-clock', 'fa-calendar-alt', 'fa-hourglass-half', 'fa-stopwatch',
+    'fa-star', 'fa-medal', 'fa-trophy', 'fa-award',
+    'fa-heart', 'fa-thumbs-up', 'fa-hand-holding-heart', 'fa-fire',
+    'fa-leaf', 'fa-sun', 'fa-moon', 'fa-cloud',
+    'fa-laptop-code', 'fa-code', 'fa-desktop', 'fa-mobile-alt',
+    'fa-palette', 'fa-music', 'fa-camera', 'fa-film',
+    'fa-running', 'fa-dumbbell', 'fa-futbol', 'fa-basketball-ball',
+    'fa-bullseye', 'fa-compass', 'fa-flag', 'fa-balance-scale',
+    'fa-briefcase', 'fa-file-alt', 'fa-folder-open', 'fa-envelope'
+  ];
+  
+  function buildIconPicker(root) {
+    // تجنّب البناء المزدوج لو تم استدعاء الدالة أكثر من مرة على نفس العنصر
+    if (root.dataset.iconPickerBuilt === '1') return;
+    root.dataset.iconPickerBuilt = '1';
+    
+    const inputId = root.getAttribute('data-input-id');
+    const defaultIcon = root.getAttribute('data-default') || 'fa-book';
+    let hiddenInput = document.getElementById(inputId);
+    
+    if (!hiddenInput) {
+      hiddenInput = document.createElement('input');
+      hiddenInput.type = 'hidden';
+      hiddenInput.id = inputId;
+      hiddenInput.value = defaultIcon;
+      root.appendChild(hiddenInput);
+    }
+    if (!hiddenInput.value) hiddenInput.value = defaultIcon;
+    
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'icon-picker-trigger';
+    trigger.innerHTML = `<i class="fas ${hiddenInput.value}"></i> <span>اختر أيقونة</span> <i class="fas fa-chevron-down trigger-arrow"></i>`;
+    
+    const panel = document.createElement('div');
+    panel.className = 'icon-picker-panel';
+    const grid = document.createElement('div');
+    grid.className = 'icon-picker-grid';
+    
+    ICON_CHOICES.forEach(iconClass => {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'icon-picker-item';
+      if (iconClass === hiddenInput.value) item.classList.add('selected');
+      item.setAttribute('data-icon', iconClass);
+      item.setAttribute('title', iconClass);
+      item.innerHTML = `<i class="fas ${iconClass}"></i>`;
+      item.addEventListener('click', () => {
+        hiddenInput.value = iconClass;
+        trigger.querySelector('i').className = `fas ${iconClass}`;
+        grid.querySelectorAll('.icon-picker-item').forEach(el => el.classList.remove('selected'));
+        item.classList.add('selected');
+        panel.classList.remove('open');
+      });
+      grid.appendChild(item);
+    });
+    
+    panel.appendChild(grid);
+    
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = panel.classList.contains('open');
+      document.querySelectorAll('.icon-picker-panel.open').forEach(p => p.classList.remove('open'));
+      if (!isOpen) panel.classList.add('open');
+    });
+    
+    root.appendChild(trigger);
+    root.appendChild(panel);
+  }
+  
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.icon-picker')) {
+      document.querySelectorAll('.icon-picker-panel.open').forEach(p => p.classList.remove('open'));
+    }
+  });
+  
+  function initAllIconPickersInternal() {
+    document.querySelectorAll('.icon-picker').forEach(buildIconPicker);
+  }
+  
   function buildUI() {
     fab = document.createElement('button');
     fab.className = 'admin-fab';
@@ -108,7 +203,10 @@
     if (typeof window.getAdminPanelHTML === 'function') {
       bodyEl.innerHTML = window.getAdminPanelHTML();
       if (typeof window.bindAdminPanelEvents === 'function') window.bindAdminPanelEvents();
-      if (typeof window.initAllIconPickers === 'function') window.initAllIconPickers();
+      // نبني منتقي الأيقونات دائماً من الداخل (مضمون 100% لأنه جزء
+      // من نفس هذا الملف الذي أثبتنا أنه يعمل)، بدل الاعتماد على
+      // نجاح تحميل ملف icon-picker.js الخارجي المنفصل
+      initAllIconPickersInternal();
     } else {
       bodyEl.innerHTML = `
                 <div style="text-align:center; padding:20px; color:var(--text-light);">

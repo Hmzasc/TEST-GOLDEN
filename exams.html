@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet" />
 
     <!-- ===== ملف الأنماط المشترك لكل صفحات الموقع ===== -->
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=20260830" />
 
     <!-- ===== FIREBASE ===== -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -244,40 +244,88 @@
 
         // ============================================================
         // محتوى لوحة الإضافة العائمة الخاصة بهذه الصفحة (admin-widget.js)
+        // سبع خانات لسبع مواد دفعة واحدة، لأن كل امتحان بكالوريا
+        // يحتوي نفس المواد السبع دائماً — يختصر الوقت بدل الإضافة
+        // مادة واحدة كل مرة.
         // ============================================================
+        const EXAM_SUBJECTS = [
+            'التربية الإسلامية',
+            'الفرنسية',
+            'العلوم الطبيعية',
+            'اللغة العربية',
+            'الفيزياء',
+            'الانجليزية',
+            'الرياضيات'
+        ];
+
         window.getAdminPanelHTML = function () {
+            const subjectFields = EXAM_SUBJECTS.map((name, i) => `
+                <div class="form-group" style="border-top:1px dashed rgba(0,0,0,0.08); padding-top:12px; margin-top:12px;">
+                    <label>${name}</label>
+                    <input type="file" data-exam-subject="${escapeHtml(name)}" id="awExamFile${i}" accept=".pdf" />
+                </div>
+            `).join('');
+
             return `
                 <h4 style="margin-bottom:12px;">📝 إضافة امتحان جديد</h4>
+                <p style="color:var(--text-light); font-size:0.82rem; margin-bottom:14px;">
+                    اختر السنة، ثم ارفع ملف PDF لأي عدد من المواد أدناه (يمكنك ترك أي مادة
+                    فارغة إذا لم يتوفر ملفها بعد، وإضافتها لاحقاً بنفس الطريقة).
+                </p>
                 <div class="form-group"><label>السنة</label><input type="number" id="awExamYear" placeholder="مثال: 2025" /></div>
-                <div class="form-group"><label>المادة</label><input type="text" id="awExamSubject" placeholder="مثال: الرياضيات" /></div>
-                <div class="form-group"><label>ملف PDF (اختر من جهازك)</label><input type="file" id="awExamFile" accept=".pdf" /></div>
-                <button class="btn-submit" id="awAddExamBtn"><i class="fas fa-plus"></i> إضافة امتحان</button>
+                ${subjectFields}
+                <button class="btn-submit" id="awAddExamBtn" style="margin-top:16px;"><i class="fas fa-plus"></i> إضافة الامتحانات</button>
             `;
         };
 
         window.bindAdminPanelEvents = function () {
             document.getElementById('awAddExamBtn').addEventListener('click', async () => {
                 const year = document.getElementById('awExamYear').value.trim();
-                const subject = document.getElementById('awExamSubject').value.trim();
-                const fileInput = document.getElementById('awExamFile');
-                if (!year || !subject) { showToast('يرجى ملء السنة والمادة', 'warning'); return; }
-                if (!fileInput.files.length) { showToast('يرجى اختيار ملف PDF', 'warning'); return; }
-                const file = fileInput.files[0];
-                if (file.type !== 'application/pdf') { showToast('يرجى اختيار ملف PDF', 'warning'); return; }
+                if (!year) { showToast('يرجى إدخال السنة', 'warning'); return; }
 
-                showSpinner('جاري رفع الملف...');
-                try {
-                    const path = `exams/${year}_${subject}_${Date.now()}.pdf`;
-                    const url = await uploadFile(file, path);
-                    await db.collection('exams').add({ year: parseInt(year), subject, pdf: url, fileName: file.name });
-                    showToast('تم إضافة الامتحان بنجاح', 'success');
-                    if (typeof closeAdminWidget === 'function') closeAdminWidget();
-                    await loadExamsFromFirestore();
-                } catch (e) {
-                    console.error(e);
-                    showToast('حدث خطأ في الرفع', 'error');
+                // نجمع كل المواد التي تم اختيار ملف لها فقط (تجاهل الفارغة)
+                const entries = [];
+                document.querySelectorAll('[data-exam-subject]').forEach(input => {
+                    if (input.files && input.files.length) {
+                        entries.push({ subject: input.dataset.examSubject, file: input.files[0] });
+                    }
+                });
+
+                if (entries.length === 0) {
+                    showToast('يرجى اختيار ملف PDF لمادة واحدة على الأقل', 'warning');
+                    return;
+                }
+                const invalidFile = entries.find(en => en.file.type !== 'application/pdf');
+                if (invalidFile) {
+                    showToast(`ملف مادة "${invalidFile.subject}" ليس بصيغة PDF`, 'warning');
+                    return;
+                }
+
+                showSpinner(`جاري رفع 0 من ${entries.length} ملفات...`);
+                let successCount = 0;
+                for (let i = 0; i < entries.length; i++) {
+                    const { subject, file } = entries[i];
+                    showSpinner(`جاري رفع ${i + 1} من ${entries.length}: ${subject}...`);
+                    try {
+                        const path = `exams/${year}_${subject}_${Date.now()}.pdf`;
+                        const url = await uploadFile(file, path);
+                        await db.collection('exams').add({ year: parseInt(year), subject, pdf: url, fileName: file.name });
+                        successCount++;
+                    } catch (e) {
+                        console.error(`فشل رفع مادة ${subject}:`, e);
+                    }
                 }
                 hideSpinner();
+
+                if (successCount === entries.length) {
+                    showToast(`تمت إضافة ${successCount} مادة بنجاح`, 'success');
+                    if (typeof closeAdminWidget === 'function') closeAdminWidget();
+                } else if (successCount > 0) {
+                    showToast(`تمت إضافة ${successCount} من ${entries.length} مواد فقط (فشل رفع الباقي)`, 'warning');
+                } else {
+                    showToast('فشل رفع كل الملفات، حاول مرة أخرى', 'error');
+                }
+                await loadExamsFromFirestore();
             });
         };
 
@@ -392,7 +440,7 @@
                                     <li class="exam-list-item">
                                         <span>${escapeHtml(sub.name)}</span>
                                         <div class="exam-item-actions">
-                                            <button class="view-pdf-btn" data-pdf="${sub.pdf}" data-title="${escapeHtml(sub.name)}"><i class="fas fa-eye"></i> عرض</button>
+                                            <button class="view-pdf-btn" data-pdf="${sub.pdf}" data-title="${escapeHtml(sub.name)}" data-filename="${escapeHtml(sub.fileName || (sub.name + '.pdf'))}"><i class="fas fa-eye"></i> عرض</button>
                                             <button class="download-btn" data-url="${sub.pdf}" data-filename="${escapeHtml(sub.fileName || (sub.name + '.pdf'))}"><i class="fas fa-download"></i> تنزيل</button>
                                             ${admin ? `<button class="comment-delete-btn" data-id="${sub.id}" title="حذف الامتحان"><i class="fas fa-trash"></i></button>` : ''}
                                         </div>
@@ -419,7 +467,7 @@
             document.querySelectorAll('.view-pdf-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const b = e.currentTarget;
-                    openPDFViewer(b.getAttribute('data-pdf'), b.getAttribute('data-title'));
+                    openPDFViewer(b.getAttribute('data-pdf'), b.getAttribute('data-title'), b.getAttribute('data-filename'));
                 });
             });
         }
@@ -490,9 +538,9 @@
 
     <!-- ===== الملفات المشتركة (نفس النظام يُستخدم في كل صفحات الموقع) ===== -->
     <!-- ===== الملفات المشتركة (نفس النظام يُستخدم في كل صفحات الموقع) ===== -->
-    <script src="pdf-viewer.js"></script>
-    <script src="download.js"></script>
-    <script src="comments.js"></script>
-    <script src="admin-widget.js"></script>
+    <script src="pdf-viewer.js?v=20260830"></script>
+    <script src="download.js?v=20260830"></script>
+    <script src="comments.js?v=20260830"></script>
+    <script src="admin-widget.js?v=20260830"></script>
 </body>
 </html>
